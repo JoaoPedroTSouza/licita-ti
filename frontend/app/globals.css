@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme {
+  --color-marca: #0f766e;
+  --color-marca-forte: #115e59;
+  --color-marca-suave: #ccfbf1;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+:root {
+  --fundo: #f6f7f5;
+  --superficie: #ffffff;
+  --texto: #18201f;
+  --texto-suave: #5b6664;
+  --borda: #e3e7e5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fundo: #0e1413;
+    --superficie: #161e1d;
+    --texto: #e8eeec;
+    --texto-suave: #98a6a3;
+    --borda: #26302e;
+  }
+}
+
+html,
+body {
+  background: var(--fundo);
+  color: var(--texto);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+
+.cartao {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 1rem;
+}
+
+.suave {
+  color: var(--texto-suave);
+}
+
+.borda {
+  border-color: var(--borda);
+}
+
+.campo {
+  width: 100%;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  color: var(--texto);
+  outline: none;
+}
+.campo:focus {
+  border-color: var(--color-marca);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-marca) 25%, transparent);
+}
+
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  padding: 0.7rem 1rem;
+  font-weight: 600;
+  background: var(--color-marca);
+  color: white;
+  transition: background 0.15s;
+}
+.botao:active {
+  background: var(--color-marca-forte);
+}
+.botao:disabled {
+  opacity: 0.5;
+}
+.botao-sec {
+  background: transparent;
+  color: var(--texto);
+  border: 1px solid var(--borda);
+}
+.botao-sec:active {
+  background: var(--borda);
+}
+
+/* espaço para a barra de navegação inferior + área segura do Android */
+.pb-nav {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+}
