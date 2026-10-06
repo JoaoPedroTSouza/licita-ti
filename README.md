@@ -1,5 +1,7 @@
 # Licita TI
 
+[![CI](https://github.com/JoaoPedroTSouza/licita-ti/actions/workflows/ci.yml/badge.svg)](https://github.com/JoaoPedroTSouza/licita-ti/actions/workflows/ci.yml)
+
 Monitor pessoal de editais públicos de **desenvolvimento web e consultoria de TI**, com app PWA para Android.
 
 ```
