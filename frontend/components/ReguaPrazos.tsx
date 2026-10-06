@@ -8,7 +8,8 @@ import type { Painel } from "@/lib/types";
 const TZ = "America/Sao_Paulo";
 const chaveDia = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
 const diaSemana = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", weekday: "short" });
-const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: TZ, hour: "2-digit" });
+const dataHora = new Intl.DateTimeFormat("pt-BR", { timeZone: TZ, weekday: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 function somarDias(chave: string, n: number): { chave: string; data: Date } {
   const d = new Date(`${chave}T12:00:00Z`);
@@ -87,7 +88,7 @@ export default function ReguaPrazos({ prazos, urgentes }: { prazos: Painel["praz
                         }`}
                       >
                         <span>{p.uf ?? "—"}</span>
-                        <span className="tabular font-medium opacity-90">{hora.format(new Date(p.data_encerramento)).replace(":00", "h")}</span>
+                        <span className="tabular font-medium opacity-90">{hora.format(new Date(p.data_encerramento)).replace(/\D/g, "")}h</span>
                       </Link>
                       {foco === p.id && (
                         <div
@@ -98,7 +99,9 @@ export default function ReguaPrazos({ prazos, urgentes }: { prazos: Painel["praz
                         >
                           <p className="line-clamp-3 text-[13px] font-medium leading-snug">{p.objeto}</p>
                           <p className="suave mt-1 truncate text-xs">{p.orgao}</p>
-                          <p className="mt-1.5 text-xs font-semibold">{prazoRelativo(p.data_encerramento).texto}</p>
+                          <p className="mt-1.5 text-xs font-semibold">
+                            {dataHora.format(new Date(p.data_encerramento))}, {prazoRelativo(p.data_encerramento).texto}
+                          </p>
                         </div>
                       )}
                     </div>
