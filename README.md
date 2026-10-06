@@ -18,6 +18,12 @@ Monitor pessoal de editais públicos de **desenvolvimento web e consultoria de T
 - **IA**: classifica relevância (0–100), categoria, resumo e exigências prováveis. Sem chave de API, o sistema funciona só com palavras-chave.
 - **Notificações**: push quando surgem editais relevantes e lembrete antes do prazo dos editais que você marcou como *Analisando* ou *Participando*.
 - **App**: feed com busca e filtros, detalhe com análise da IA, funil de acompanhamento, notas, e ajustes (palavras-chave, UFs, modalidades, faixa de valor, perfil).
+- **Workspace**:
+  - **Painel** de monitoramento: números principais, régua de prazos dos próximos 14 dias, editais relevantes por dia, distribuição por estado e saúde das coletas.
+  - **Ideias**: quadro por situação (novas, validando, em execução, concluídas), com arrastar e soltar no desktop, prioridade, etiquetas, potencial mensal e vínculo opcional a um edital.
+- **Layout**: desktop de 1440px com menu lateral; abaixo de 1024px vira barra inferior. Tema claro e escuro.
+
+> Quer ver tudo funcionando antes da primeira coleta? Rode `python -m app.scripts.seed_demo` no backend para criar dados de demonstração. As capturas de tela geradas pelo CI ficam no branch [`capturas`](../../tree/capturas).
 
 ## 1. Rodar localmente (Docker)
 

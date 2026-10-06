@@ -1,10 +1,10 @@
 /* Service worker do Licita TI: cache para uso offline + notificações push. */
-const VERSAO = "v1";
+const VERSAO = "v2";
 const CACHE_SHELL = `shell-${VERSAO}`;
 const CACHE_DADOS = `dados-${VERSAO}`;
 const CACHE_ESTATICO = `estatico-${VERSAO}`;
 
-const SHELL = ["/", "/acompanhamento", "/ajustes", "/login", "/manifest.webmanifest", "/icons/icon-192.png"];
+const SHELL = ["/", "/editais", "/ideias", "/acompanhamento", "/ajustes", "/login", "/manifest.webmanifest", "/icons/icon-192.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

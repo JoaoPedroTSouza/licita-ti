@@ -13,6 +13,7 @@ from app.config import get_settings
 from app.db import SessionLocal, get_db, init_db
 from app.models import Edital, ExecucaoColeta, PushSubscription
 from app.push import enviar_para_todos, push_configurado
+from app.workspace import router as workspace_router
 from app.schemas import (
     ColetaIn, EditalDetalhe, EditalUpdate, LoginIn, Pagina, PushSubscriptionIn, Resumo, TokenOut,
 )
@@ -27,6 +28,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(workspace_router)
 
 
 @app.on_event("startup")

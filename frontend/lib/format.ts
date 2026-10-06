@@ -12,6 +12,14 @@ export function formatarValor(v: number | null | undefined): string {
   return moeda.format(v);
 }
 
+const compacto = new Intl.NumberFormat("pt-BR", { notation: "compact", maximumFractionDigits: 1 });
+
+/** R$ 1,2 mi · R$ 380 mil */
+export function formatarValorCurto(v: number | null | undefined): string {
+  if (!v) return "R$ 0";
+  return `R$ ${compacto.format(v)}`;
+}
+
 export function formatarData(iso: string | null | undefined): string {
   if (!iso) return "—";
   return dataHora.format(new Date(iso));

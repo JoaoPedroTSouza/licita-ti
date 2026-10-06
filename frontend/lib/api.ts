@@ -39,5 +39,6 @@ export async function api<T = unknown>(caminho: string, opcoes: RequestInit = {}
     } catch {}
     throw new ErroApi(resp.status, msg);
   }
+  if (resp.status === 204) return undefined as T;
   return resp.json() as Promise<T>;
 }

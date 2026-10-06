@@ -131,7 +131,7 @@ def notificar_novos(db: Session, prefs: dict, ia_ativa: bool) -> int:
     else:
         titulo = f"{len(enviar)} novos editais de TI"
         corpo = "\n".join(f"• {_encurtar(x.objeto, 70)}" for x in enviar[:3])
-        url = "/?filtro=relevantes"
+        url = "/editais?filtro=relevantes"
     enviar_para_todos(db, titulo, corpo, url=url, tag="novos-editais")
     return len(enviar)
 

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 Status = Literal["novo", "analisando", "participando", "descartado"]
 
@@ -82,6 +82,60 @@ class PushSubscriptionIn(BaseModel):
 class ColetaIn(BaseModel):
     data: str | None = None  # YYYY-MM-DD; padrão = hoje
     dias: int = 1
+
+
+StatusIdeia = Literal["nova", "validando", "executando", "concluida", "descartada"]
+TipoIdeia = Literal["produto", "servico", "conteudo", "melhoria", "proposta"]
+Prioridade = Literal["baixa", "media", "alta"]
+
+
+class IdeiaIn(BaseModel):
+    titulo: str = Field(min_length=1, max_length=200)
+    descricao: str | None = None
+    tipo: TipoIdeia = "produto"
+    status: StatusIdeia = "nova"
+    prioridade: Prioridade = "media"
+    tags: list[str] = []
+    potencial_mensal: float | None = Field(default=None, ge=0)
+    edital_id: int | None = None
+
+
+class IdeiaUpdate(BaseModel):
+    titulo: str | None = Field(default=None, min_length=1, max_length=200)
+    descricao: str | None = None
+    tipo: TipoIdeia | None = None
+    status: StatusIdeia | None = None
+    prioridade: Prioridade | None = None
+    tags: list[str] | None = None
+    potencial_mensal: float | None = Field(default=None, ge=0)
+    edital_id: int | None = None
+
+
+class EditalMini(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    objeto: str
+    orgao: str | None
+    uf: str | None
+    data_encerramento: datetime | None
+
+
+class IdeiaOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    titulo: str
+    descricao: str | None
+    tipo: str
+    status: str
+    prioridade: str
+    tags: list[str]
+    potencial_mensal: float | None
+    edital_id: int | None
+    edital: EditalMini | None = None
+    criado_em: datetime
+    atualizado_em: datetime
 
 
 class Resumo(BaseModel):

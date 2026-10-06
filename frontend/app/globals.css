@@ -1,28 +1,99 @@
 @import "tailwindcss";
 
-@theme {
-  --color-marca: #0f766e;
-  --color-marca-forte: #115e59;
-  --color-marca-suave: #ccfbf1;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
+/* Cor como informação:
+   azul     → editais e monitoramento
+   roxo     → ideias e análises da IA
+   vermelho → apenas pressão de prazo
+   preto    → texto e o tema escuro */
 
 :root {
-  --fundo: #f6f7f5;
+  --fundo: #f6f7fb;
   --superficie: #ffffff;
-  --texto: #18201f;
-  --texto-suave: #5b6664;
-  --borda: #e3e7e5;
+  --superficie-2: #f0f2f8;
+  --texto: #15151c;
+  --texto-suave: #5d6072;
+  --borda: #e4e6ee;
+  --grade: #eceef4;
+
+  --azul: #3d63dd;
+  --azul-forte: #2f4fb8;
+  --azul-suave: #edf1fd;
+  --azul-texto: #2f4fb8;
+
+  --roxo: #7a5af5;
+  --roxo-forte: #5b3fd1;
+  --roxo-suave: #f2effe;
+  --roxo-texto: #5b3fd1;
+
+  --vermelho: #e5484d;
+  --vermelho-suave: #fdeeee;
+  --vermelho-texto: #c53035;
+
+  --ok-suave: #e9f7ef;
+  --ok-texto: #1d7a46;
+  --ambar-suave: #fdf4e3;
+  --ambar-texto: #9a5b07;
+
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --fundo: #0e1413;
-    --superficie: #161e1d;
-    --texto: #e8eeec;
-    --texto-suave: #98a6a3;
-    --borda: #26302e;
+    --fundo: #0c0c11;
+    --superficie: #14141b;
+    --superficie-2: #1b1b24;
+    --texto: #ececf1;
+    --texto-suave: #9b9eb0;
+    --borda: #262633;
+    --grade: #22222d;
+
+    --azul: #6e8cf5;
+    --azul-forte: #8aa3f8;
+    --azul-suave: #1a2140;
+    --azul-texto: #a5b8fa;
+
+    --roxo: #a08bff;
+    --roxo-forte: #b6a5ff;
+    --roxo-suave: #231c3f;
+    --roxo-texto: #c4b6ff;
+
+    --vermelho: #f2777b;
+    --vermelho-suave: #3a1a1d;
+    --vermelho-texto: #ff9ea1;
+
+    --ok-suave: #14301f;
+    --ok-texto: #7fd8a3;
+    --ambar-suave: #33270f;
+    --ambar-texto: #f0c06a;
+
+    color-scheme: dark;
   }
+}
+
+@theme inline {
+  --color-fundo: var(--fundo);
+  --color-superficie: var(--superficie);
+  --color-superficie-2: var(--superficie-2);
+  --color-texto: var(--texto);
+  --color-texto-suave: var(--texto-suave);
+  --color-borda: var(--borda);
+  --color-grade: var(--grade);
+  --color-azul: var(--azul);
+  --color-azul-forte: var(--azul-forte);
+  --color-azul-suave: var(--azul-suave);
+  --color-azul-texto: var(--azul-texto);
+  --color-roxo: var(--roxo);
+  --color-roxo-forte: var(--roxo-forte);
+  --color-roxo-suave: var(--roxo-suave);
+  --color-roxo-texto: var(--roxo-texto);
+  --color-vermelho: var(--vermelho);
+  --color-vermelho-suave: var(--vermelho-suave);
+  --color-vermelho-texto: var(--vermelho-texto);
+  --color-ok-suave: var(--ok-suave);
+  --color-ok-texto: var(--ok-texto);
+  --color-ambar-suave: var(--ambar-suave);
+  --color-ambar-texto: var(--ambar-texto);
+  --font-sans: var(--font-ui), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 html,
@@ -30,13 +101,21 @@ body {
   background: var(--fundo);
   color: var(--texto);
   -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: contain;
 }
 
+body {
+  font-feature-settings: "ss01", "cv11";
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Painéis: borda fina, sem sombra — leve */
 .cartao {
   background: var(--superficie);
   border: 1px solid var(--borda);
-  border-radius: 1rem;
+  border-radius: 14px;
 }
 
 .suave {
@@ -51,14 +130,19 @@ body {
   width: 100%;
   background: var(--superficie);
   border: 1px solid var(--borda);
-  border-radius: 0.75rem;
-  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
   color: var(--texto);
   outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.campo::placeholder {
+  color: var(--texto-suave);
+  opacity: 0.8;
 }
 .campo:focus {
-  border-color: var(--color-marca);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-marca) 25%, transparent);
+  border-color: var(--azul);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--azul) 18%, transparent);
 }
 
 .botao {
@@ -66,29 +150,56 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 0.75rem;
-  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
   font-weight: 600;
-  background: var(--color-marca);
-  color: white;
+  font-size: 0.9rem;
+  background: var(--azul);
+  color: #fff;
   transition: background 0.15s;
 }
-.botao:active {
-  background: var(--color-marca-forte);
+.botao:hover {
+  background: var(--azul-forte);
 }
 .botao:disabled {
   opacity: 0.5;
+  pointer-events: none;
+}
+.botao-roxo {
+  background: var(--roxo);
+}
+.botao-roxo:hover {
+  background: var(--roxo-forte);
 }
 .botao-sec {
-  background: transparent;
+  background: var(--superficie);
   color: var(--texto);
   border: 1px solid var(--borda);
 }
-.botao-sec:active {
-  background: var(--borda);
+.botao-sec:hover {
+  background: var(--superficie-2);
 }
 
-/* espaço para a barra de navegação inferior + área segura do Android */
+:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}
+
+/* Espaço para a barra inferior no celular */
 .pb-nav {
-  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 1024px) {
+  .pb-nav {
+    padding-bottom: 3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

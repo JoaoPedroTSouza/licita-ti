@@ -1,9 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
-import { api, setToken } from "@/lib/api";
+import { api } from "@/lib/api";
 import { formatarData } from "@/lib/format";
 import { ativarPush, desativarPush, inscricaoAtual, pushSuportado } from "@/lib/push";
 import type { Preferencias } from "@/lib/types";
@@ -24,7 +23,6 @@ interface Execucao {
 const linhas = (t: string) => t.split("\n").map((s) => s.trim()).filter(Boolean);
 
 export default function AjustesPage() {
-  const router = useRouter();
   const [prefs, setPrefs] = useState<Preferencias | null>(null);
   const [modalidades, setModalidades] = useState<Record<string, string>>({});
   const [chaves, setChaves] = useState("");
@@ -33,6 +31,7 @@ export default function AjustesPage() {
   const [pushAtivo, setPushAtivo] = useState(false);
   const [pushMsg, setPushMsg] = useState("");
   const [historico, setHistorico] = useState<Execucao[]>([]);
+  const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
     api<{ preferencias: Preferencias; modalidades: Record<string, string> }>("/config").then((r) => {
@@ -45,13 +44,22 @@ export default function AjustesPage() {
     inscricaoAtual().then((s) => setPushAtivo(Boolean(s)));
   }, []);
 
+  function avisar(texto: string) {
+    setMsg(texto);
+    setTimeout(() => setMsg(""), 4500);
+  }
+
   async function salvar() {
     if (!prefs) return;
-    const corpo = { ...prefs, palavras_chave: linhas(chaves), palavras_exclusao: linhas(exclusoes) };
-    const r = await api<{ preferencias: Preferencias }>("/config", { method: "PUT", body: JSON.stringify(corpo) });
-    setPrefs(r.preferencias);
-    setMsg("Preferências salvas. Valem a partir da próxima coleta.");
-    setTimeout(() => setMsg(""), 4000);
+    setSalvando(true);
+    try {
+      const corpo = { ...prefs, palavras_chave: linhas(chaves), palavras_exclusao: linhas(exclusoes) };
+      const r = await api<{ preferencias: Preferencias }>("/config", { method: "PUT", body: JSON.stringify(corpo) });
+      setPrefs(r.preferencias);
+      avisar("Preferências salvas. Valem a partir da próxima coleta.");
+    } finally {
+      setSalvando(false);
+    }
   }
 
   async function alternarPush() {
@@ -66,19 +74,25 @@ export default function AjustesPage() {
         setPushMsg("Alertas ativados neste aparelho.");
       }
     } catch (e) {
-      setPushMsg(e instanceof Error ? e.message : "Falha ao configurar notificações");
+      setPushMsg(e instanceof Error ? e.message : "Não foi possível configurar as notificações.");
     }
   }
 
   async function coletarAgora(dias: number) {
     const r = await api<{ mensagem: string }>("/coleta", { method: "POST", body: JSON.stringify({ dias }) });
-    setMsg(r.mensagem);
+    avisar(r.mensagem);
   }
+
+  const botaoSalvar = (
+    <button className="botao" onClick={salvar} disabled={!prefs || salvando}>
+      {salvando ? "Salvando…" : "Salvar preferências"}
+    </button>
+  );
 
   if (!prefs) {
     return (
       <Shell titulo="Ajustes">
-        <p className="suave py-10 text-center text-sm">Carregando…</p>
+        <p className="suave py-16 text-center text-sm">Carregando…</p>
       </Shell>
     );
   }
@@ -86,142 +100,160 @@ export default function AjustesPage() {
   const toggle = <T,>(lista: T[], item: T) => (lista.includes(item) ? lista.filter((x) => x !== item) : [...lista, item]);
 
   return (
-    <Shell titulo="Ajustes">
-      {msg && <p className="mb-4 rounded-xl bg-marca-suave p-3 text-sm text-marca-forte">{msg}</p>}
+    <Shell titulo="Ajustes" subtitulo="O que monitorar, quando avisar e como a IA avalia os editais" acao={<span className="hidden lg:block">{botaoSalvar}</span>}>
+      {msg && (
+        <p className="mb-4 rounded-xl bg-azul-suave p-3 text-sm text-azul-texto" role="status">
+          {msg}
+        </p>
+      )}
 
-      <Secao titulo="Notificações">
-        {pushSuportado() ? (
-          <>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Alertas de novos editais</p>
-                <p className="suave text-xs">Novos editais relevantes e prazos se aproximando.</p>
-              </div>
-              <button
-                role="switch"
-                aria-checked={pushAtivo}
-                onClick={alternarPush}
-                className={`relative h-7 w-12 shrink-0 rounded-full transition ${pushAtivo ? "bg-marca" : "bg-zinc-300 dark:bg-zinc-700"}`}
-              >
-                <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${pushAtivo ? "left-6" : "left-1"}`} />
-              </button>
+      <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
+        {/* ---------- Coluna 1: o que buscar ---------- */}
+        <div className="space-y-4 lg:space-y-5">
+          <Secao titulo="Palavras-chave" ajuda="Uma por linha, sem acento. Plurais simples são reconhecidos.">
+            <textarea className="campo min-h-56 font-mono text-xs leading-relaxed" value={chaves} onChange={(e) => setChaves(e.target.value)} />
+            <p className="mb-1.5 mt-4 text-sm font-medium">Descartar quando contiver</p>
+            <textarea className="campo min-h-32 font-mono text-xs leading-relaxed" value={exclusoes} onChange={(e) => setExclusoes(e.target.value)} />
+          </Secao>
+
+          <Secao titulo="Estados" ajuda="Nenhum marcado = Brasil todo.">
+            <div className="grid grid-cols-7 gap-1.5 sm:grid-cols-9">
+              {UFS.map((uf) => (
+                <button
+                  key={uf}
+                  onClick={() => setPrefs({ ...prefs, ufs: toggle(prefs.ufs, uf) })}
+                  aria-pressed={prefs.ufs.includes(uf)}
+                  className={`rounded-lg py-1.5 text-xs font-semibold ${prefs.ufs.includes(uf) ? "bg-azul text-white" : "bg-superficie-2 hover:bg-azul-suave"}`}
+                >
+                  {uf}
+                </button>
+              ))}
             </div>
-            {pushMsg && <p className="mt-2 text-xs">{pushMsg}</p>}
-            {pushAtivo && (
-              <button className="botao botao-sec mt-3 w-full text-sm" onClick={() => api("/push/teste", { method: "POST" })}>
-                Enviar notificação de teste
-              </button>
-            )}
-          </>
-        ) : (
-          <p className="suave text-sm">Abra no Chrome do Android e instale o app para receber notificações.</p>
-        )}
-      </Secao>
+          </Secao>
 
-      <Secao titulo="Seu perfil (usado pela IA)">
-        <textarea className="campo min-h-24 text-sm" value={prefs.perfil} onChange={(e) => setPrefs({ ...prefs, perfil: e.target.value })} />
-        <label className="mt-3 block text-sm">
-          Nota mínima da IA para notificar: <b className="tabular-nums">{prefs.score_minimo_ia_push}</b>
-          <input
-            type="range"
-            min={30}
-            max={95}
-            step={5}
-            value={prefs.score_minimo_ia_push}
-            onChange={(e) => setPrefs({ ...prefs, score_minimo_ia_push: Number(e.target.value) })}
-            className="mt-1 w-full accent-teal-700"
-          />
-        </label>
-      </Secao>
+          <Secao titulo="Modalidades monitoradas">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {Object.entries(modalidades).map(([cod, nome]) => (
+                <label key={cod} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-[var(--azul)]"
+                    checked={prefs.modalidades.includes(Number(cod))}
+                    onChange={() => setPrefs({ ...prefs, modalidades: toggle(prefs.modalidades, Number(cod)) })}
+                  />
+                  {nome}
+                </label>
+              ))}
+            </div>
+          </Secao>
 
-      <Secao titulo="Palavras-chave (uma por linha)">
-        <textarea className="campo min-h-40 font-mono text-xs" value={chaves} onChange={(e) => setChaves(e.target.value)} />
-        <p className="suave mt-1 text-xs">Sem acento e em minúsculas. Plurais simples são reconhecidos.</p>
-        <p className="mb-1 mt-4 text-sm font-medium">Excluir quando contiver</p>
-        <textarea className="campo min-h-28 font-mono text-xs" value={exclusoes} onChange={(e) => setExclusoes(e.target.value)} />
-      </Secao>
-
-      <Secao titulo="Estados (nenhum = Brasil todo)">
-        <div className="flex flex-wrap gap-1.5">
-          {UFS.map((uf) => (
-            <button
-              key={uf}
-              onClick={() => setPrefs({ ...prefs, ufs: toggle(prefs.ufs, uf) })}
-              className={`w-11 rounded-lg py-1.5 text-xs font-semibold ${prefs.ufs.includes(uf) ? "bg-marca text-white" : "cartao"}`}
-            >
-              {uf}
-            </button>
-          ))}
+          <Secao titulo="Faixa de valor" ajuda="Em reais. Deixe em branco para não limitar.">
+            <div className="grid grid-cols-2 gap-2">
+              <input type="number" inputMode="numeric" className="campo tabular" placeholder="Mínimo" value={prefs.valor_minimo || ""}
+                onChange={(e) => setPrefs({ ...prefs, valor_minimo: Number(e.target.value) || 0 })} />
+              <input type="number" inputMode="numeric" className="campo tabular" placeholder="Máximo" value={prefs.valor_maximo || ""}
+                onChange={(e) => setPrefs({ ...prefs, valor_maximo: Number(e.target.value) || 0 })} />
+            </div>
+          </Secao>
         </div>
-      </Secao>
 
-      <Secao titulo="Modalidades monitoradas">
-        <div className="space-y-2">
-          {Object.entries(modalidades).map(([cod, nome]) => (
-            <label key={cod} className="flex items-center gap-2 text-sm">
+        {/* ---------- Coluna 2: IA, avisos e coleta ---------- */}
+        <div className="space-y-4 lg:space-y-5">
+          <Secao titulo="Seu perfil" ajuda="A IA usa este texto para julgar se o edital cabe no seu porte e especialidade." tom="roxo">
+            <textarea className="campo min-h-28 text-sm leading-relaxed" value={prefs.perfil} onChange={(e) => setPrefs({ ...prefs, perfil: e.target.value })} />
+            <label className="mt-4 block text-sm">
+              <span className="flex justify-between">
+                Nota mínima da IA para avisar
+                <b className="tabular text-roxo-texto">{prefs.score_minimo_ia_push}</b>
+              </span>
               <input
-                type="checkbox"
-                className="h-4 w-4 accent-teal-700"
-                checked={prefs.modalidades.includes(Number(cod))}
-                onChange={() => setPrefs({ ...prefs, modalidades: toggle(prefs.modalidades, Number(cod)) })}
+                type="range"
+                min={30}
+                max={95}
+                step={5}
+                value={prefs.score_minimo_ia_push}
+                onChange={(e) => setPrefs({ ...prefs, score_minimo_ia_push: Number(e.target.value) })}
+                className="mt-2 w-full accent-[var(--roxo)]"
               />
-              {nome}
             </label>
-          ))}
+          </Secao>
+
+          <Secao titulo="Notificações">
+            {pushSuportado() ? (
+              <>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium">Alertas neste aparelho</p>
+                    <p className="suave text-xs">Novos editais relevantes e prazos se aproximando.</p>
+                  </div>
+                  <button
+                    role="switch"
+                    aria-checked={pushAtivo}
+                    aria-label="Alertas neste aparelho"
+                    onClick={alternarPush}
+                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${pushAtivo ? "bg-azul" : "bg-borda"}`}
+                  >
+                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${pushAtivo ? "left-6" : "left-1"}`} />
+                  </button>
+                </div>
+                {pushMsg && <p className="mt-2 text-xs">{pushMsg}</p>}
+                {pushAtivo && (
+                  <button className="botao botao-sec mt-3 w-full text-sm" onClick={() => api("/push/teste", { method: "POST" })}>
+                    Enviar notificação de teste
+                  </button>
+                )}
+              </>
+            ) : (
+              <p className="suave text-sm">Abra no Chrome do Android e instale o app para receber notificações.</p>
+            )}
+          </Secao>
+
+          <Secao titulo="Coleta" ajuda="Automática às 7h, 12h e 18h. Use os botões para buscar agora.">
+            <div className="grid grid-cols-2 gap-2">
+              <button className="botao botao-sec text-sm" onClick={() => coletarAgora(1)}>Coletar hoje</button>
+              <button className="botao botao-sec text-sm" onClick={() => coletarAgora(7)}>Coletar últimos 7 dias</button>
+            </div>
+            <ul className="mt-4 divide-y divide-borda text-xs">
+              {historico.slice(0, 8).map((h) => (
+                <li key={h.id} className="flex justify-between gap-2 py-2">
+                  <span className="suave tabular">{formatarData(h.finalizado_em)}</span>
+                  {h.erro ? (
+                    <span className="font-medium text-vermelho-texto" title={h.erro}>Falhou</span>
+                  ) : (
+                    <span className="tabular">
+                      {h.recebidos} lidos, {h.novos} novos, {h.relevantes} relevantes
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Secao>
         </div>
-      </Secao>
+      </div>
 
-      <Secao titulo="Faixa de valor (R$, 0 = sem limite)">
-        <div className="grid grid-cols-2 gap-2">
-          <input type="number" inputMode="numeric" className="campo" placeholder="Mínimo" value={prefs.valor_minimo || ""}
-            onChange={(e) => setPrefs({ ...prefs, valor_minimo: Number(e.target.value) || 0 })} />
-          <input type="number" inputMode="numeric" className="campo" placeholder="Máximo" value={prefs.valor_maximo || ""}
-            onChange={(e) => setPrefs({ ...prefs, valor_maximo: Number(e.target.value) || 0 })} />
-        </div>
-      </Secao>
-
-      <button className="botao sticky bottom-24 z-10 mb-6 w-full shadow-lg" onClick={salvar}>
-        Salvar preferências
-      </button>
-
-      <Secao titulo="Coleta">
-        <div className="grid grid-cols-2 gap-2">
-          <button className="botao botao-sec text-sm" onClick={() => coletarAgora(1)}>Coletar hoje</button>
-          <button className="botao botao-sec text-sm" onClick={() => coletarAgora(7)}>Últimos 7 dias</button>
-        </div>
-        <ul className="mt-3 divide-y borda text-xs">
-          {historico.slice(0, 6).map((h) => (
-            <li key={h.id} className="flex justify-between py-2">
-              <span className="suave">{formatarData(h.finalizado_em)}</span>
-              {h.erro ? (
-                <span className="text-red-600">falhou</span>
-              ) : (
-                <span className="tabular-nums">
-                  {h.recebidos} lidos · {h.novos} novos · {h.relevantes} relevantes
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </Secao>
-
-      <button
-        className="botao botao-sec mb-6 w-full text-red-600"
-        onClick={() => {
-          setToken(null);
-          router.replace("/login");
-        }}
-      >
-        Sair
-      </button>
+      <div className="sticky bottom-24 z-10 mt-5 lg:hidden">
+        <div className="[&>button]:w-full [&>button]:shadow-lg">{botaoSalvar}</div>
+      </div>
     </Shell>
   );
 }
 
-function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+function Secao({
+  titulo,
+  ajuda,
+  tom,
+  children,
+}: {
+  titulo: string;
+  ajuda?: string;
+  tom?: "roxo";
+  children: React.ReactNode;
+}) {
   return (
-    <section className="cartao mb-4 p-4">
-      <h2 className="mb-3 text-sm font-bold">{titulo}</h2>
+    <section className={`cartao p-5 lg:p-6 ${tom === "roxo" ? "border-roxo/25" : ""}`}>
+      <h2 className="text-base font-semibold">{titulo}</h2>
+      {ajuda && <p className="suave mb-3 mt-0.5 text-sm">{ajuda}</p>}
+      {!ajuda && <div className="mb-3" />}
       {children}
     </section>
   );

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
 
@@ -69,6 +69,32 @@ class Edital(Base):
     notificado: Mapped[bool] = mapped_column(Boolean, default=False)
     lembrete_enviado: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora)
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora, onupdate=agora)
+
+
+STATUS_IDEIA = ("nova", "validando", "executando", "concluida", "descartada")
+TIPOS_IDEIA = ("produto", "servico", "conteudo", "melhoria", "proposta")
+PRIORIDADES = ("baixa", "media", "alta")
+
+
+class Ideia(Base):
+    """Ideias de negócio, melhorias e propostas — opcionalmente ligadas a um edital."""
+
+    __tablename__ = "ideias"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    titulo: Mapped[str] = mapped_column(String(200))
+    descricao: Mapped[str | None] = mapped_column(Text)
+    tipo: Mapped[str] = mapped_column(String(20), default="produto")
+    status: Mapped[str] = mapped_column(String(20), default="nova", index=True)
+    prioridade: Mapped[str] = mapped_column(String(10), default="media")
+    tags: Mapped[list] = mapped_column(JSON, default=list)
+    potencial_mensal: Mapped[float | None] = mapped_column(Float)
+    edital_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("editais.id", ondelete="SET NULL"), index=True
+    )
+    edital: Mapped["Edital | None"] = relationship(lazy="joined")
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora)
     atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora, onupdate=agora)
 
