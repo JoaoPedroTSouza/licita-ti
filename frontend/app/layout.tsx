@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Sans } from "next/font/google";
+import { Figtree } from "next/font/google";
 import "./globals.css";
 import RegistrarSW from "@/components/RegistrarSW";
 
-const fonte = Instrument_Sans({ subsets: ["latin"], variable: "--font-ui", display: "swap" });
+const fonte = Figtree({ subsets: ["latin"], variable: "--font-ui", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Licita TI",

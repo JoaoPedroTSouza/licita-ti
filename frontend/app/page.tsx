@@ -149,7 +149,7 @@ function Numero({
   const corpo = (
     <>
       <p className={`tabular text-[28px] font-semibold leading-none tracking-tight ${tom === "roxo" ? "text-roxo-texto" : ""}`}>{valor}</p>
-      <p className="suave mt-2 text-xs leading-snug">{rotulo}</p>
+      <p className="suave mt-2 text-[13px] leading-snug">{rotulo}</p>
     </>
   );
   const cls = "block px-4 py-4 lg:px-6 lg:py-5";

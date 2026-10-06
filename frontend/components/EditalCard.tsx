@@ -14,7 +14,7 @@ export function ScoreBadge({ score }: { score: number | null }) {
   return (
     <span
       className={`tabular rounded-md px-1.5 py-0.5 text-[11px] font-bold ${
-        forte ? "bg-roxo text-white" : "bg-roxo-suave text-roxo-texto"
+        forte ? "bg-acao-roxo text-white" : "bg-roxo-suave text-roxo-texto"
       }`}
       title={`Aderência estimada pela IA: ${score} de 100`}
     >

@@ -123,7 +123,7 @@ export default function AjustesPage() {
                   key={uf}
                   onClick={() => setPrefs({ ...prefs, ufs: toggle(prefs.ufs, uf) })}
                   aria-pressed={prefs.ufs.includes(uf)}
-                  className={`rounded-lg py-1.5 text-xs font-semibold ${prefs.ufs.includes(uf) ? "bg-azul text-white" : "bg-superficie-2 hover:bg-azul-suave"}`}
+                  className={`rounded-lg py-1.5 text-xs font-semibold ${prefs.ufs.includes(uf) ? "bg-acao-azul text-white" : "bg-superficie-2 hover:bg-azul-suave"}`}
                 >
                   {uf}
                 </button>
@@ -191,7 +191,7 @@ export default function AjustesPage() {
                     aria-checked={pushAtivo}
                     aria-label="Alertas neste aparelho"
                     onClick={alternarPush}
-                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${pushAtivo ? "bg-azul" : "bg-borda"}`}
+                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${pushAtivo ? "bg-acao-azul" : "bg-borda"}`}
                   >
                     <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${pushAtivo ? "left-6" : "left-1"}`} />
                   </button>

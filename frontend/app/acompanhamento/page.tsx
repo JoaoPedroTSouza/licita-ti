@@ -38,7 +38,7 @@ export default function AcompanhamentoPage() {
           <button
             key={s}
             onClick={() => setAba(s)}
-            className={`rounded-lg py-2 text-sm font-semibold ${aba === s ? "bg-azul text-white" : "suave"}`}
+            className={`rounded-lg py-2 text-sm font-semibold ${aba === s ? "bg-acao-azul text-white" : "suave"}`}
           >
             {STATUS_INFO[s].rotulo} <span className="tabular opacity-75">{dados?.[s]?.length ?? ""}</span>
           </button>

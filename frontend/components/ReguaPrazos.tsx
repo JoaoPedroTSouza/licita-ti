@@ -80,9 +80,9 @@ export default function ReguaPrazos({ prazos, urgentes }: { prazos: Painel["praz
                         aria-label={`${p.objeto}. Encerra ${prazoRelativo(p.data_encerramento).texto}.`}
                         className={`flex items-center justify-between gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold ${
                           urgenteDia
-                            ? "bg-vermelho text-white"
+                            ? "bg-acao-vermelho text-white"
                             : p.status === "participando" || p.status === "analisando"
-                              ? "bg-azul text-white"
+                              ? "bg-acao-azul text-white"
                               : "bg-superficie text-azul-texto ring-1 ring-inset ring-azul/30"
                         }`}
                       >
@@ -116,8 +116,8 @@ export default function ReguaPrazos({ prazos, urgentes }: { prazos: Painel["praz
       </div>
 
       <div className="suave mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs">
-        <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-vermelho" />Até 48h</span>
-        <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-azul" />No seu funil</span>
+        <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-acao-vermelho" />Até 48h</span>
+        <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-acao-azul" />No seu funil</span>
         <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm ring-1 ring-inset ring-azul/40" />Relevante, ainda não analisado</span>
       </div>
     </section>

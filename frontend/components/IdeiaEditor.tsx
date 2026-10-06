@@ -132,7 +132,7 @@ export default function IdeiaEditor({
         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
           <input
             ref={tituloRef}
-            className="w-full bg-transparent text-xl font-semibold outline-none placeholder:text-texto-suave/60"
+            className="w-full bg-transparent text-xl font-semibold outline-none placeholder:text-texto-suave/60 focus-visible:outline-none"
             placeholder="Qual é a ideia?"
             value={r.titulo}
             maxLength={200}
@@ -146,14 +146,14 @@ export default function IdeiaEditor({
           />
 
           <Campo rotulo="Situação">
-            <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5">
+            <div className="flex flex-wrap gap-1.5">
               {(Object.keys(STATUS_IDEIA) as StatusIdeia[]).map((s) => (
                 <button
                   type="button"
                   key={s}
                   onClick={() => set("status", s)}
-                  className={`rounded-lg px-2 py-1.5 text-xs font-medium ${
-                    r.status === s ? "bg-roxo text-white" : "bg-superficie-2 hover:bg-roxo-suave"
+                  className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ${
+                    r.status === s ? "bg-acao-roxo text-white" : "bg-superficie-2 hover:bg-roxo-suave"
                   }`}
                 >
                   {STATUS_IDEIA[s].singular}

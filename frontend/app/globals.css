@@ -34,6 +34,13 @@
   --ambar-suave: #fdf4e3;
   --ambar-texto: #9a5b07;
 
+  /* Botões: mesmos tons nos dois temas para manter o texto branco legível */
+  --acao-azul: #3d63dd;
+  --acao-azul-hover: #2f4fb8;
+  --acao-roxo: #6f4ef0;
+  --acao-roxo-hover: #5b3fd1;
+  --acao-vermelho: #d93d42;
+
   color-scheme: light;
 }
 
@@ -66,6 +73,9 @@
     --ambar-suave: #33270f;
     --ambar-texto: #f0c06a;
 
+    --acao-azul-hover: #4a70e8;
+    --acao-roxo-hover: #7d5ff5;
+
     color-scheme: dark;
   }
 }
@@ -89,6 +99,9 @@
   --color-vermelho: var(--vermelho);
   --color-vermelho-suave: var(--vermelho-suave);
   --color-vermelho-texto: var(--vermelho-texto);
+  --color-acao-azul: var(--acao-azul);
+  --color-acao-roxo: var(--acao-roxo);
+  --color-acao-vermelho: var(--acao-vermelho);
   --color-ok-suave: var(--ok-suave);
   --color-ok-texto: var(--ok-texto);
   --color-ambar-suave: var(--ambar-suave);
@@ -103,14 +116,13 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-body {
-  font-feature-settings: "ss01", "cv11";
+@layer components {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
-.tabular {
-  font-variant-numeric: tabular-nums;
-}
-
+@layer components {
 /* Painéis: borda fina, sem sombra — leve */
 .cartao {
   background: var(--superficie);
@@ -154,22 +166,22 @@ body {
   padding: 0.6rem 1rem;
   font-weight: 600;
   font-size: 0.9rem;
-  background: var(--azul);
+  background: var(--acao-azul);
   color: #fff;
   transition: background 0.15s;
 }
 .botao:hover {
-  background: var(--azul-forte);
+  background: var(--acao-azul-hover);
 }
 .botao:disabled {
   opacity: 0.5;
   pointer-events: none;
 }
 .botao-roxo {
-  background: var(--roxo);
+  background: var(--acao-roxo);
 }
 .botao-roxo:hover {
-  background: var(--roxo-forte);
+  background: var(--acao-roxo-hover);
 }
 .botao-sec {
   background: var(--superficie);
@@ -178,6 +190,7 @@ body {
 }
 .botao-sec:hover {
   background: var(--superficie-2);
+}
 }
 
 :focus-visible {

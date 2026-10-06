@@ -153,7 +153,7 @@ function Ideias() {
               <button
                 key={s}
                 onClick={() => setAbaMobile(s)}
-                className={`shrink-0 rounded-lg px-3 py-2 text-sm font-medium ${abaMobile === s ? "bg-roxo text-white" : "suave"}`}
+                className={`shrink-0 rounded-lg px-3 py-2 text-sm font-medium ${abaMobile === s ? "bg-acao-roxo text-white" : "suave"}`}
               >
                 {STATUS_IDEIA[s].rotulo} <span className="tabular opacity-75">{porColuna(s).length}</span>
               </button>

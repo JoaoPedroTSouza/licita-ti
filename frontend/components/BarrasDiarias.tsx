@@ -24,7 +24,7 @@ export default function BarrasDiarias({
         <span className="suave tabular text-sm">{total} em 14 dias</span>
       </figcaption>
 
-      <div className="relative flex h-48 gap-3">
+      <div className="relative flex h-56 gap-3 lg:h-64">
         {/* eixo y */}
         <div className="suave tabular flex w-6 flex-col justify-between text-right text-[11px]">
           {linhas.map((v) => (

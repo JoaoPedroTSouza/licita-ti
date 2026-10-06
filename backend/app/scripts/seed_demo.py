@@ -91,7 +91,7 @@ def main() -> None:
             atualizado_em=agora - timedelta(hours=j * 5),
         ))
 
-    for k in range(6):
+    for k in reversed(range(6)):  # mais antiga primeiro, como numa sequência real
         fim = agora - timedelta(hours=6 * k + 1)
         db.add(ExecucaoColeta(
             iniciado_em=fim - timedelta(minutes=3), finalizado_em=fim, data_referencia=fim.date().isoformat(),
