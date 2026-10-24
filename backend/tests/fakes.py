@@ -1,4 +1,5 @@
 """Dublês em memória das portas, compartilhados pelos testes de aplicação e interface."""
+from copy import deepcopy
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -144,12 +145,25 @@ class UnidadeDeTrabalhoEmMemoria:
         self.cotacoes = RepositorioCotacoesEmMemoria()
         self.commits = 0
         self.rollbacks = 0
+        self._instantaneo = self._copiar()
+
+    _REPOSITORIOS = (
+        "oportunidades", "processos", "lembretes", "contatos",
+        "configuracoes", "execucoes", "cotacoes",
+    )
+
+    def _copiar(self) -> dict:
+        return {n: deepcopy(vars(getattr(self, n))) for n in self._REPOSITORIOS}
 
     def commit(self) -> None:
         self.commits += 1
+        self._instantaneo = self._copiar()
 
     def rollback(self) -> None:
+        """Como o banco: descarta o que não foi confirmado desde o último commit."""
         self.rollbacks += 1
+        for nome, estado in self._instantaneo.items():
+            vars(getattr(self, nome)).update(deepcopy(estado))
 
     def __enter__(self):
         return self
