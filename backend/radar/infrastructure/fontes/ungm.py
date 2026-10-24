@@ -47,8 +47,10 @@ class FonteUngm:
     nome = "ungm"
 
     def __init__(self, http: httpx.Client, consultas: list[ConsultaUngm],
-                 pausa: Callable[[float], None] = time.sleep) -> None:
+                 pausa: Callable[[float], None] = time.sleep,
+                 conhecido: Callable[[OportunidadeBruta], bool] | None = None) -> None:
         self._http = http
+        self._conhecido = conhecido
         self._consultas = consultas
         self._pausa = pausa
         self._primeira = True
@@ -61,7 +63,8 @@ class FonteUngm:
             for titulo in consulta.palavras or ("",):
                 for aviso in self._buscar_consulta(token, consulta.pais, titulo, desde):
                     avisos.setdefault(aviso.id_externo, aviso)
-        return [self._com_detalhe(a) for a in avisos.values()]
+        return [a if self._conhecido and self._conhecido(a) else self._com_detalhe(a)
+                for a in avisos.values()]
 
     def _requisitar(self, metodo: str, caminho: str, **kwargs) -> httpx.Response:
         if not self._primeira:
@@ -101,6 +104,9 @@ class FonteUngm:
             encontrados.extend(linhas)
             if len(linhas) < POR_PAGINA:
                 break
+        else:
+            log.warning("UNGM: consulta (pais=%s, titulo=%r) truncada em %d páginas",
+                        pais, titulo, MAX_PAGINAS)
         return encontrados
 
     def _com_detalhe(self, aviso: OportunidadeBruta) -> OportunidadeBruta:

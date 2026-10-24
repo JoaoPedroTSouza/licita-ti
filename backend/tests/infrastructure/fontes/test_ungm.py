@@ -39,9 +39,10 @@ class ServidorUngm:
         return httpx.Response(404)
 
 
-def _fonte(servidor, consultas, pausas=None):
+def _fonte(servidor, consultas, pausas=None, conhecido=None):
     http = httpx.Client(transport=httpx.MockTransport(servidor))
-    return FonteUngm(http, consultas, pausa=(pausas.append if pausas is not None else lambda s: None))
+    return FonteUngm(http, consultas, conhecido=conhecido,
+                     pausa=(pausas.append if pausas is not None else lambda s: None))
 
 
 BRASIL = ConsultaUngm(pais="Brazil", palavras=())
@@ -120,3 +121,52 @@ def test_consultas_padrao():
         ConsultaUngm(pais=None, palavras=("software", "information technology",
                                           "digital platform", "web development", "database")),
     )
+
+
+def test_nao_busca_detalhe_de_aviso_conhecido():
+    servidor = ServidorUngm()
+    vistos: set[str] = set()
+    fonte = _fonte(servidor, [BRASIL], conhecido=lambda b: b.id_externo in vistos)
+
+    primeira = fonte.buscar(date(2026, 10, 20))
+    vistos.update(a.id_externo for a in primeira)
+    assert len(servidor.detalhes) == 15
+
+    servidor.detalhes.clear()
+    segunda = fonte.buscar(date(2026, 10, 20))
+
+    assert servidor.detalhes == []
+    assert len(segunda) == 15 and "UNICEF Brasil" not in segunda[0].texto
+
+
+def test_prazo_so_com_data_vale_23h59_no_fuso():
+    from radar.infrastructure.fontes.ungm import _converter_prazo
+    assert _converter_prazo("03-Nov-2026 (GMT -3.00)") == datetime(2026, 11, 4, 2, 59, tzinfo=timezone.utc)
+    assert _converter_prazo("03-Nov-2026") == datetime(2026, 11, 3, 23, 59, tzinfo=timezone.utc)
+
+
+def test_falha_no_detalhe_mantem_aviso_da_lista():
+    base = ServidorUngm()
+
+    def servidor(req):
+        if req.method == "GET" and req.url.path.startswith("/Public/Notice/"):
+            return httpx.Response(500)
+        return base(req)
+
+    avisos = _fonte(servidor, [BRASIL]).buscar(date(2026, 10, 20))
+
+    assert len(avisos) == 15 and all(a.titulo in a.texto for a in avisos)
+
+
+def test_avisa_quando_consulta_e_truncada(caplog):
+    base = ServidorUngm()
+
+    def servidor(req):
+        if req.method == "POST":
+            return httpx.Response(200, content=_ler("lista_brasil.html"))  # sempre 15 linhas
+        return base(req)
+
+    with caplog.at_level("WARNING"):
+        _fonte(servidor, [BRASIL]).buscar(date(2026, 10, 20))
+
+    assert "truncada" in caplog.text
