@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ETAPAS, formatarAproxBrl, formatarDiaPorExtenso, formatarDinheiro, formatarPrazo } from "./formato";
+import { ETAPAS, formatarAproxBrl, formatarDiaPorExtenso, formatarDinheiro, formatarPrazo, formatarUltimoContato } from "./formato";
 
 describe("formatarDinheiro", () => {
   it("formata BRL e USD", () => {
@@ -84,5 +84,22 @@ describe("formatarDiaPorExtenso", () => {
     expect(formatarDiaPorExtenso("2026-10-23")).toBe("Sexta, 23 de outubro");
     expect(formatarDiaPorExtenso("2026-03-01")).toBe("Domingo, 1 de março");
     expect(formatarDiaPorExtenso("2026-12-31")).toBe("Quinta, 31 de dezembro");
+  });
+});
+
+describe("formatarUltimoContato", () => {
+  const agora = new Date("2026-10-23T15:00:00Z");
+  it("nunca quando não há data", () => {
+    expect(formatarUltimoContato(null, agora)).toBe("nunca");
+  });
+  it("hoje, ontem e há N dias", () => {
+    expect(formatarUltimoContato("2026-10-23", agora)).toBe("hoje");
+    expect(formatarUltimoContato("2026-10-22", agora)).toBe("ontem");
+    expect(formatarUltimoContato("2026-10-02", agora)).toBe("há 21 dias");
+  });
+  it("usa o calendário de Brasília, não o UTC", () => {
+    const tarde = new Date("2026-10-24T01:00:00Z"); // ainda 23/10 em Brasília
+    expect(formatarUltimoContato("2026-10-23", tarde)).toBe("hoje");
+    expect(formatarUltimoContato("2026-10-22", tarde)).toBe("ontem");
   });
 });

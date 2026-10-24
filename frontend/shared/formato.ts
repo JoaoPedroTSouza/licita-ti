@@ -73,3 +73,13 @@ export function formatarDiaPorExtenso(dia: string): string {
   const semana = DIAS_SEMANA[new Date(Date.UTC(ano, mes - 1, d)).getUTCDay()];
   return `${semana[0].toUpperCase()}${semana.slice(1)}, ${d} de ${MESES_LONGOS[mes - 1]}`;
 }
+
+/** "nunca", "hoje", "ontem" ou "há N dias" a partir da data (AAAA-MM-DD) do último contato, no calendário de Brasília. */
+export function formatarUltimoContato(data: string | null, agora: Date): string {
+  if (!data) return "nunca";
+  const [ano, mes, dia] = data.split("-").map(Number);
+  const dias = diaAbsoluto(partesEmBrasilia(agora)) - Date.UTC(ano, mes - 1, dia) / 86_400_000;
+  if (dias <= 0) return "hoje";
+  if (dias === 1) return "ontem";
+  return `há ${dias} dias`;
+}
