@@ -1,3 +1,11 @@
+import { Suspense } from "react";
+import QuadroFunil from "@/features/funil/QuadroFunil";
+import Carregando from "@/shared/ui/Carregando";
+
 export default function Pagina() {
-  return <h1 className="text-2xl font-bold tracking-tight">Funil</h1>;
+  return (
+    <Suspense fallback={<Carregando />}>
+      <QuadroFunil />
+    </Suspense>
+  );
 }
