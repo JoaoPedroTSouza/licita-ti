@@ -110,12 +110,12 @@ def prazos(agora, prazo=PRAZO, etapa=Etapa.ANALISANDO):
 
 
 def test_aviso_de_prazo_3_e_1_dia_sem_repetir():
-    _, p, n, relogio, caso = prazos(PRAZO - timedelta(days=2, hours=12))  # 23/10 03:00 BRT
+    _, p, n, relogio, caso = prazos(PRAZO - timedelta(days=3))  # 23/10 12:00 BRT
     assert caso.executar() == 1
     assert n.enviadas == [("Prazo em 3 dias: Edital X", "26/10 12:00", f"{URL}/funil?processo={p.id}")]
     assert p.avisos_prazo_enviados == {3}
     assert caso.executar() == 0
-    relogio.avancar(days=2)  # 25/10 03:00 BRT: falta 1 dia de calendario
+    relogio.avancar(days=2)  # 25/10 12:00 BRT: falta 1 dia de calendario
     assert caso.executar() == 1
     assert n.enviadas[1][0] == "Prazo em 1 dia: Edital X"
     assert p.avisos_prazo_enviados == {3, 1}
@@ -139,3 +139,38 @@ def test_processo_fechado_ou_distante_nao_avisa():
     assert caso.executar() == 0
     _, _, n, _, caso = prazos(PRAZO - timedelta(days=10))
     assert caso.executar() == 0
+
+
+def test_prazo_hoje_usa_texto_proprio():
+    _, p, n, _, caso = prazos(PRAZO - timedelta(hours=2))  # 10:00 BRT de 26/10
+    assert caso.executar() == 1
+    assert n.enviadas[0][0] == "Prazo hoje: Edital X"
+    assert p.avisos_prazo_enviados == {3, 1}
+
+
+def test_texto_usa_dias_reais_e_nao_o_limiar():
+    _, p, n, _, caso = prazos(PRAZO - timedelta(days=2))  # 24/10: limiar 3 atingido, faltam 2
+    assert caso.executar() == 1
+    assert n.enviadas[0][0] == "Prazo em 2 dias: Edital X"
+    assert p.avisos_prazo_enviados == {3}
+
+
+def test_falha_do_notificador_preserva_avisos_ja_confirmados():
+    agora = PRAZO - timedelta(days=3)
+    uow = UnidadeDeTrabalhoEmMemoria()
+    for titulo in ("Um", "Dois"):
+        uow.processos.adicionar(Processo.novo(titulo, agora, prazo=PRAZO))
+
+    class NotificadorQuebrado(NotificadorFalso):
+        def enviar(self, titulo, corpo, url):
+            if "Dois" in titulo:
+                raise RuntimeError("push fora do ar")
+            return super().enviar(titulo, corpo, url)
+
+    caso = VerificarPrazos(uow, NotificadorQuebrado(), Relogio(agora), TZ, URL)
+    with pytest.raises(RuntimeError):
+        caso.executar()
+    um, dois = uow.processos.listar()
+    assert um.avisos_prazo_enviados == {3}
+    assert dois.avisos_prazo_enviados == set()
+    assert uow.commits == 1

@@ -77,16 +77,19 @@ class VerificarPrazos:
                 ]
                 if not atingidos:
                     continue
-                self._avisar(p, min(atingidos), prazo_local.strftime("%d/%m %H:%M"))
+                self._avisar(p, dias_restantes, prazo_local.strftime("%d/%m %H:%M"))
                 p.avisos_prazo_enviados.update(atingidos)
                 self._uow.processos.salvar(p)
+                self._uow.commit()
                 enviados += 1
-            self._uow.commit()
         return enviados
 
     def _avisar(self, p: Processo, dias: int, quando: str) -> None:
-        unidade = "dia" if dias == 1 else "dias"
+        if dias <= 0:
+            titulo = f"Prazo hoje: {p.titulo}"
+        else:
+            titulo = f"Prazo em {dias} {'dia' if dias == 1 else 'dias'}: {p.titulo}"
         self._notificador.enviar(
-            f"Prazo em {dias} {unidade}: {p.titulo}", quando,
+            titulo, quando,
             f"{self._app_url}/funil?processo={p.id}",
         )
