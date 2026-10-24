@@ -134,6 +134,7 @@ export interface ExecucaoFonte {
 export interface Status {
   ia_configurada: boolean;
   push_configurado: boolean;
+  pendentes_classificacao: number;
   fontes: ExecucaoFonte[];
 }
 

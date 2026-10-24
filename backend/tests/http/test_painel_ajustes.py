@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 from radar.application.portas import ExecucaoFonte
+from radar.domain.oportunidade import StatusOportunidade
 from tests.http.conftest import semear
 
 
@@ -72,6 +73,14 @@ def test_status_com_ia(cliente_logado):
     assert corpo["ia_configurada"] is True
     assert corpo["push_configurado"] is True
     assert corpo["fontes"] == []
+    assert corpo["pendentes_classificacao"] == 0
+
+
+def test_status_conta_pendentes_de_classificacao(cliente_logado):
+    semear(cliente_logado.container, "A", 50, status=StatusOportunidade.PENDENTE)
+    semear(cliente_logado.container, "B", 50, status=StatusOportunidade.PENDENTE)
+    semear(cliente_logado.container, "C", 50)
+    assert cliente_logado.get("/api/status").json()["pendentes_classificacao"] == 2
 
 
 def test_status_sem_ia(cliente_logado_sem_classificador):

@@ -49,6 +49,9 @@ class RepositorioOportunidadesEmMemoria(_Repositorio):
     def pendentes(self, limite: int) -> list[Oportunidade]:
         return [o for o in self._itens.values() if o.status == StatusOportunidade.PENDENTE][:limite]
 
+    def contar_pendentes(self) -> int:
+        return len(self.pendentes(10**9))
+
     def contar_novas_desde(self, desde: datetime) -> int:
         return sum(
             1 for o in self._itens.values()

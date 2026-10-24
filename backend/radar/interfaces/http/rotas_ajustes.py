@@ -50,8 +50,10 @@ def salvar_ajustes(corpo: AjustesDTO, c: Container = Depends(obter_container)):
 def status(c: Container = Depends(obter_container)):
     with c.uow() as uow:
         execucoes = uow.execucoes.ultimas_por_fonte()
+        pendentes = uow.oportunidades.contar_pendentes()
     return StatusDTO(
         ia_configurada=c.classificador is not None,
         push_configurado=c.notificador.configurado,
+        pendentes_classificacao=pendentes,
         fontes=[execucao_dto(e) for e in execucoes],
     )

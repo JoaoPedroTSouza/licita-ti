@@ -1,3 +1,6 @@
+import pytest
+
+
 def criar(c, **extra):
     r = c.post("/api/processos", json={"titulo": "Consultoria X", **extra})
     assert r.status_code == 201, r.text
@@ -17,6 +20,13 @@ def test_criar_manual_mover_e_ver_historico(cliente_logado):
     assert d["historico"][-1]["de"] == "analisando" and d["historico"][-1]["para"] == "negociacao"
     lista = cliente_logado.get("/api/processos").json()
     assert lista[0]["titulo"] == "Consultoria X" and "notas" not in lista[0]
+
+
+@pytest.mark.parametrize("valor", ["-1", "1000000000000.00", "10.123", "NaN"])
+def test_valor_invalido_422(cliente_logado, valor):
+    r = cliente_logado.post("/api/processos", json={
+        "titulo": "X", "valor": {"valor": valor, "moeda": "BRL"}})
+    assert r.status_code == 422
 
 
 def test_etapa_invalida_422(cliente_logado):

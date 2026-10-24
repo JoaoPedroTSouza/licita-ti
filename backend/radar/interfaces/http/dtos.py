@@ -260,6 +260,7 @@ class ExecucaoFonteDTO(BaseModel):
 class StatusDTO(BaseModel):
     ia_configurada: bool
     push_configurado: bool
+    pendentes_classificacao: int
     fontes: list[ExecucaoFonteDTO]
 
 
@@ -311,7 +312,7 @@ def contato_dto(c: Contato, hoje: date) -> ContatoDTO:
 # ------------------------------------------------- entrada: funil, rede e push
 
 class ValorIn(BaseModel):
-    valor: Decimal
+    valor: Decimal = Field(ge=0, max_digits=14, decimal_places=2)
     moeda: str = Field(min_length=3, max_length=3)
 
     def para_dominio(self) -> Dinheiro:

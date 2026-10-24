@@ -47,6 +47,13 @@ export default function Pagina() {
           aparece na Entrada.
         </p>
       )}
+      {estado && estado.ia_configurada && estado.pendentes_classificacao > 0 && (
+        <p role="status" className="rounded-lg bg-aviso-suave p-3 text-sm text-aviso-texto">
+          {estado.pendentes_classificacao === 1
+            ? "1 oportunidade aguardando avaliação da IA."
+            : `${estado.pendentes_classificacao} oportunidades aguardando avaliação da IA.`}
+        </p>
+      )}
       {estado && !estado.push_configurado && (
         <p role="alert" className="rounded-lg bg-aviso-suave p-3 text-sm text-aviso-texto">
           As notificações não estão configuradas: gere as chaves com <code>python -m radar.interfaces.gen_vapid</code> e

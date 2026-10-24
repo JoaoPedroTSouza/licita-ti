@@ -123,6 +123,12 @@ class RepositorioOportunidadesSql:
              .order_by(t.oportunidades.c.id).limit(limite))
         return [_oportunidade_para_dominio(r) for r in self._s.execute(q).mappings()]
 
+    def contar_pendentes(self) -> int:
+        return self._s.execute(
+            select(func.count()).select_from(t.oportunidades)
+            .where(t.oportunidades.c.status == StatusOportunidade.PENDENTE.value)
+        ).scalar_one()
+
     def listar(self, status: StatusOportunidade, limite: int | None = None) -> list[Oportunidade]:
         o = t.oportunidades.c
         prazo = func.coalesce(o.prazo, o.cls_prazo)

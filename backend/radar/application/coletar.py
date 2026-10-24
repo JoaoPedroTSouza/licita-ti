@@ -46,7 +46,7 @@ class ColetarOportunidades:
         if self._classificador is not None:
             self._classificar_pendentes(self._classificador, resumo)
         with self._uow:
-            resumo.pendentes = len(self._uow.oportunidades.pendentes(10**9))
+            resumo.pendentes = self._uow.oportunidades.contar_pendentes()
         return resumo
 
     def _coletar_fonte(

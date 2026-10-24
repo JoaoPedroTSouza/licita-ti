@@ -303,3 +303,13 @@ def test_rollback_em_excecao(uow):
     with uow:
         assert uow.oportunidades.contar_novas_desde(AGORA - timedelta(days=1)) == 1
         assert not uow.oportunidades.existe_chave(_bruta("perdida").chave_deduplicacao())
+
+
+def test_contar_pendentes(uow):
+    with uow:
+        uow.oportunidades.adicionar(_op("P1", status=StatusOportunidade.PENDENTE))
+        uow.oportunidades.adicionar(_op("P2", status=StatusOportunidade.PENDENTE))
+        uow.oportunidades.adicionar(_op("N", status=StatusOportunidade.NOVA))
+        uow.commit()
+    with uow:
+        assert uow.oportunidades.contar_pendentes() == 2
