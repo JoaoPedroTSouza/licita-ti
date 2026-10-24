@@ -19,15 +19,18 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql+psycopg://licita:${POSTGRES_PASSWORD:-licita}@db:5432/licita
+      ARQUIVOS_DIR: /data/arquivos
     depends_on:
       db: { condition: service_healthy }
     ports:
       - "8000:8000"
+    volumes:
+      - arquivos:/data/arquivos
 
   worker:
     build: ./backend
     restart: unless-stopped
-    command: python -m app.worker
+    command: python -m radar.interfaces.worker
     env_file: .env
     environment:
       DATABASE_URL: postgresql+psycopg://licita:${POSTGRES_PASSWORD:-licita}@db:5432/licita
@@ -63,3 +66,4 @@ services:
 volumes:
   pgdata:
   caddy_data:
+  arquivos:
