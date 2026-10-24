@@ -199,3 +199,16 @@ class RelogioFixo:
 
     def agora(self) -> datetime:
         return self._agora
+
+
+class ArmazenamentoArquivosEmMemoria:
+    def __init__(self) -> None:
+        self.arquivos: dict[str, bytes] = {}
+
+    def salvar(self, nome: str, conteudo: bytes) -> str:
+        chave = f"{len(self.arquivos) + 1}-{nome}"
+        self.arquivos[chave] = conteudo
+        return chave
+
+    def abrir(self, chave: str) -> bytes:
+        return self.arquivos[chave]
