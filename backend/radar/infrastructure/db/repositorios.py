@@ -125,7 +125,7 @@ class RepositorioOportunidadesSql:
 
     def listar(self, status: StatusOportunidade, limite: int | None = None) -> list[Oportunidade]:
         o = t.oportunidades.c
-        prazo = func.coalesce(o.cls_prazo, o.prazo)
+        prazo = func.coalesce(o.prazo, o.cls_prazo)
         q = (select(t.oportunidades).where(o.status == status.value)
              .order_by(func.coalesce(o.cls_nota, 0).desc(), case((prazo.is_(None), 1), else_=0), prazo, o.id))
         if limite is not None:

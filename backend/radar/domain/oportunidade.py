@@ -1,11 +1,15 @@
 """Entidades e valores do domínio de oportunidades."""
+import hashlib
 import re
 import unicodedata
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+from zoneinfo import ZoneInfo
 
 from radar.domain.dinheiro import Dinheiro
+
+FUSO_PRAZOS = ZoneInfo("America/Sao_Paulo")
 
 
 class Modalidade(str, Enum):
@@ -57,8 +61,13 @@ class OportunidadeBruta:
     idioma: str | None = None
 
     def chave_deduplicacao(self) -> str:
-        prazo = self.prazo.date().isoformat() if self.prazo else "-"
-        return "|".join((_normalizar(self.titulo), _normalizar(self.organizacao), prazo))
+        """sha256 de título normalizado + dia do prazo em Brasília.
+
+        A organização fica de fora: cada fonte a nomeia de um jeito ("PAHO", "OPAS/OMS Brasil").
+        """
+        prazo = self.prazo.astimezone(FUSO_PRAZOS).date().isoformat() if self.prazo else "-"
+        partes = f"{_normalizar(self.titulo)}|{prazo}"
+        return hashlib.sha256(partes.encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -92,9 +101,9 @@ class Oportunidade:
 
     @property
     def prazo(self) -> datetime | None:
-        if self.classificacao and self.classificacao.prazo:
-            return self.classificacao.prazo
-        return self.bruta.prazo
+        if self.bruta.prazo:  # o prazo estruturado da fonte vale mais que o lido pela IA
+            return self.bruta.prazo
+        return self.classificacao.prazo if self.classificacao else None
 
     @property
     def valor(self) -> Dinheiro | None:

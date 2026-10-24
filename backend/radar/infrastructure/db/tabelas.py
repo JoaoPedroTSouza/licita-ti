@@ -58,7 +58,7 @@ metadata = MetaData()
 oportunidades = Table(
     "oportunidades", metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("chave", String(600), nullable=False, unique=True, index=True),
+    Column("chave", String(64), nullable=False, unique=True, index=True),
     Column("status", String(30), nullable=False, index=True),
     Column("coletada_em", DataHoraUtc, nullable=False),
     Column("fonte", String(100), nullable=False),
