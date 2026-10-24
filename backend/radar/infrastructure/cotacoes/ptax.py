@@ -22,12 +22,13 @@ class FontePtax:
             dia = ate - timedelta(days=recuo)
             try:
                 boletins = self._boletins(moeda, dia)
-            except (httpx.HTTPError, ValueError) as e:
+                ultimo = max(boletins, key=lambda b: b["dataHoraCotacao"]) if boletins else None
+                valor = ultimo["cotacaoVenda"] if ultimo else None
+            except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
                 log.warning("PTAX indisponível (%s %s): %s", moeda, dia, e)
                 return None
-            if boletins:
-                ultimo = max(boletins, key=lambda b: b["dataHoraCotacao"])
-                return dia, ultimo["cotacaoVenda"]
+            if valor is not None:
+                return dia, valor
         return None
 
     def _boletins(self, moeda: str, dia: date) -> list[dict]:

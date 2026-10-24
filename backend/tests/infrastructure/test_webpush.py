@@ -75,3 +75,17 @@ def test_inscrever_duas_vezes_mesmo_endpoint_nao_duplica(fabrica):
     with fabrica() as s:
         linha = s.execute(select(t.inscricoes_push)).mappings().one()
     assert (linha["p256dh"], linha["auth"], linha["user_agent"]) == ("k2", "a2", "UA2")
+
+
+def test_erro_de_rede_nao_interrompe_os_demais_nem_a_limpeza(fabrica):
+    def enviar(subscription_info, **_):
+        if subscription_info["endpoint"] == "https://p/1":
+            raise WebPushException("gone", response=_Resposta(410))
+        if subscription_info["endpoint"] == "https://p/2":
+            raise ConnectionError("sem rede")
+
+    n = NotificadorWebPush(fabrica, "chave", "mailto:a@b.c", enviar=enviar)
+    for i in (1, 2, 3):
+        n.inscrever(f"https://p/{i}", "k", "a", None)
+    assert n.enviar("t", "c", "/") == 1
+    assert _contar(fabrica) == 2

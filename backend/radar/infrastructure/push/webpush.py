@@ -60,6 +60,8 @@ class NotificadorWebPush:
                     expiradas.append(sub["id"])
                 else:
                     log.warning("Falha no push (%s): %s", status, e)
+            except Exception as e:  # rede, chave inválida etc.: não interrompe os demais aparelhos
+                log.warning("Falha no push para %s: %s", sub["endpoint"], e)
         if expiradas:
             with self._fabrica() as s, s.begin():
                 s.execute(delete(t.inscricoes_push).where(t.inscricoes_push.c.id.in_(expiradas)))

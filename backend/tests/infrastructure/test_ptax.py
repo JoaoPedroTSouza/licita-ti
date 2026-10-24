@@ -54,3 +54,9 @@ def test_ptax_erro_de_rede_devolve_none():
         raise httpx.ConnectError("sem rede")
 
     assert _fonte(handler).cotacao("USD", date(2026, 10, 22)) is None
+
+
+def test_ptax_formato_inesperado_devolve_none():
+    assert _fonte(lambda r: httpx.Response(200, json={"erro": 1})).cotacao("USD", date(2026, 10, 22)) is None
+    sem_campos = {"value": [{"dataHoraCotacao": "2026-10-22 10:00:00.0"}]}
+    assert _fonte(lambda r: httpx.Response(200, json=sem_campos)).cotacao("USD", date(2026, 10, 22)) is None
