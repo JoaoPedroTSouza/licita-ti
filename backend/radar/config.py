@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     llm_model: str = "claude-haiku-5-5"
     llm_max_por_execucao: int = 60  # teto de chamadas por coleta (controle de custo)
 
+    # Fontes (ReliefWeb exige appname aprovado; vazio = fonte desativada)
+    reliefweb_appname: str = ""
+
     # Web Push
     vapid_public_key: str = ""
     vapid_private_key: str = ""
