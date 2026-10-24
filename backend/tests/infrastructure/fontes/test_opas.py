@@ -40,7 +40,8 @@ def test_extrai_itens_com_prazo_em_formato_brasileiro():
     assert aviso.prazo == datetime(2026, 10, 9, 2, 59, tzinfo=timezone.utc)
     assert "Prazo final" in aviso.texto and aviso.titulo in aviso.texto
     relativo = por_link["https://www.paho.org/sites/default/files/edital-plataforma.pdf"]
-    assert relativo.prazo == datetime(2026, 11, 21, 2, 59, tzinfo=timezone.utc)
+    # "20/11/2026, até 16h" (Brasília) == 19:00 UTC
+    assert relativo.prazo == datetime(2026, 11, 20, 19, 0, tzinfo=timezone.utc)
     real = next(i for i in itens if i.link.startswith("https://pan-american"))
     assert real.titulo.startswith("Contratação de fornecedor para aquisição de bens móveis")
 
@@ -48,7 +49,7 @@ def test_extrai_itens_com_prazo_em_formato_brasileiro():
 def test_ignora_itens_com_prazo_passado_em_relacao_a_desde():
     itens = _fonte("pagina_varios.html").buscar(date(2026, 10, 10))
 
-    assert [i.prazo.date() for i in itens] == [date(2026, 11, 21)]
+    assert [i.prazo.date() for i in itens] == [date(2026, 11, 20)]
 
 
 def test_prazo_no_proprio_dia_de_desde_ainda_vale():
@@ -62,7 +63,22 @@ def test_pagina_sem_lista_levanta_erro():
         _fonte(conteudo=b"<html><body><main><p>Manutencao</p></main></body></html>").buscar(date(2026, 10, 1))
 
 
-def test_corpo_sem_avisos_com_prazo_levanta_erro():
+def test_corpo_sem_avisos_devolve_lista_vazia():
     html = b'<article><div class="field--name-body"><p>Nenhuma oportunidade.</p></div></article>'
-    with pytest.raises(ValueError, match="OPAS"):
-        _fonte(conteudo=html).buscar(date(2026, 10, 1))
+    assert _fonte(conteudo=html).buscar(date(2026, 10, 1)) == []
+
+
+def test_le_a_hora_do_prazo_quando_presente():
+    (item,) = _fonte("pagina.html").buscar(date(2026, 10, 1))
+    # "09/10/2026, até 16h" em Brasília (UTC-3) == 19:00 UTC
+    assert item.prazo == datetime(2026, 10, 9, 19, 0, tzinfo=timezone.utc)
+
+
+def test_le_hora_com_minutos():
+    html = (
+        '<article><div class="field--name-body"><p><strong>Aviso</strong></p>'
+        "<p>Prazo final para envio de propostas: 09/10/2026, até 14h30</p>"
+        '<p><a href="/x.pdf">Clique aqui</a></p></div></article>'
+    ).encode()
+    (item,) = _fonte(conteudo=html).buscar(date(2026, 10, 1))
+    assert item.prazo == datetime(2026, 10, 9, 17, 30, tzinfo=timezone.utc)

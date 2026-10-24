@@ -2,7 +2,8 @@
 
 A página é HTML renderizado no servidor (Drupal) com texto livre no corpo: cada aviso é uma
 sequência de parágrafos: título (em negrito), "Prazo final para envio de propostas: dd/mm/aaaa"
-e um link "Clique aqui". Prazos "dd/mm/aaaa" valem 23:59 em America/Sao_Paulo, convertidos para UTC.
+e um link "Clique aqui". Prazos "dd/mm/aaaa, até 16h" (ou "16h30") são horário de Brasília;
+sem hora, valem 23:59. Tudo é convertido para UTC. Corpo sem avisos com prazo = nenhuma chamada.
 A URL antiga /pt/licitacoes-opas redireciona para a atual.
 """
 import re
@@ -18,6 +19,7 @@ URL = "https://www.paho.org/pt/licitacoes-e-oportunidades-opas-no-brasil"
 USER_AGENT = "RadarBot/1.0 (consulta pessoal de oportunidades; contato: jpsouzatavaress@gmail.com)"
 BRT = ZoneInfo("America/Sao_Paulo")
 _PRAZO = re.compile(r"prazo[^\d]*(\d{2})/(\d{2})/(\d{4})", re.IGNORECASE)
+_HORA = re.compile(r"\s*,?\s*até\s*(\d{1,2})\s*h\s*(\d{2})?", re.IGNORECASE)
 _MARCADORES = re.compile(r"^[^\w(\[]+")  # emojis e símbolos no início da linha
 
 
@@ -37,16 +39,17 @@ class FonteOpas:
         paragrafos = corpo.find_all("p")
         itens = [self._item(paragrafos, i) for i, p in enumerate(paragrafos)
                  if _PRAZO.search(p.get_text(" ", strip=True))]
-        if not itens:
-            raise ValueError("OPAS: formato da página não reconhecido (nenhum aviso com prazo)")
         limite = datetime.combine(desde, time.min, tzinfo=BRT)
         return [i for i in itens if i.prazo >= limite]
 
     @staticmethod
     def _item(paragrafos: list[Tag], posicao: int) -> OportunidadeBruta:
-        m = _PRAZO.search(paragrafos[posicao].get_text(" ", strip=True))
+        texto = paragrafos[posicao].get_text(" ", strip=True)
+        m = _PRAZO.search(texto)
         dia, mes, ano = (int(g) for g in m.groups())
-        prazo = datetime(ano, mes, dia, 23, 59, tzinfo=BRT).astimezone(timezone.utc)
+        h = _HORA.match(texto, m.end())
+        hora, minuto = (int(h.group(1)), int(h.group(2) or 0)) if h else (23, 59)
+        prazo = datetime(ano, mes, dia, hora, minuto, tzinfo=BRT).astimezone(timezone.utc)
         titulo = _limpar(paragrafos[posicao - 1].get_text(" ", strip=True)) if posicao else ""
         link = _link(paragrafos, posicao)
         if not titulo or link is None:
