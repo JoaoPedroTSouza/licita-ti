@@ -24,13 +24,13 @@ def cenario(agora=AGORA):
 
 
 def lembrete(uow, vence_em, texto="x", processo_id=None):
-    return uow.lembretes.adicionar(Lembrete(None, texto, vence_em, processo_id))
+    return uow.direto.lembretes.adicionar(Lembrete(None, texto, vence_em, processo_id))
 
 
 def processo(uow, titulo="P", etapa=Etapa.ANALISANDO, valor=None, prazo=None):
     p = Processo.novo(titulo, AGORA, valor=valor, prazo=prazo)
     p.etapa = etapa
-    return uow.processos.adicionar(p)
+    return uow.direto.processos.adicionar(p)
 
 
 def test_lembrete_23h30_brt_aparece_hoje():
@@ -47,7 +47,7 @@ def test_lembrete_de_amanha_nao_aparece():
 
 def test_ordem_lembretes_prazos_contatos():
     uow, caso = cenario()
-    contato = uow.contatos.adicionar(Contato(None, "Ana", frequencia_dias=7))
+    contato = uow.direto.contatos.adicionar(Contato(None, "Ana", frequencia_dias=7))
     p = processo(uow, "Edital", prazo=AGORA + timedelta(days=2))
     tardio = lembrete(uow, datetime(2026, 10, 23, 20, 0, tzinfo=UTC), "B", p.id)
     cedo = lembrete(uow, datetime(2026, 10, 22, 12, 0, tzinfo=UTC), "A")
@@ -71,7 +71,7 @@ def test_prazo_fora_da_janela_ou_passado_ou_fechado_nao_aparece():
 
 def test_valor_aberto_converte_e_ignora_fechados():
     uow, caso = cenario()
-    uow.cotacoes.salvar("USD", date(2026, 10, 22), Decimal("5.00"))
+    uow.direto.cotacoes.salvar("USD", date(2026, 10, 22), Decimal("5.00"))
     processo(uow, valor=Dinheiro(Decimal("120000"), "BRL"))
     processo(uow, valor=Dinheiro(Decimal("1000"), "USD"))
     processo(uow, etapa=Etapa.FECHADO, valor=Dinheiro(Decimal("999"), "BRL"))
@@ -97,7 +97,7 @@ def nova(uow, nota, titulo):
     bruta = OportunidadeBruta("f", titulo, titulo, "Org", "http://x", "t")
     c = Classificacao(True, nota, "r", Modalidade.REMOTO_TOTAL, "t", "pt",
                       TipoContratacao.EMPRESA, "m")
-    return uow.oportunidades.adicionar(
+    return uow.direto.oportunidades.adicionar(
         Oportunidade(None, bruta, AGORA, StatusOportunidade.NOVA, c)
     )
 

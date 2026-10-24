@@ -47,7 +47,7 @@ def resumo(agora):
 def add_nova(uow, agora):
     bruta = OportunidadeBruta("f", "1", "T", "O", "http://x", "t")
     c = Classificacao(True, 90, "r", Modalidade.REMOTO_TOTAL, "t", "pt", TipoContratacao.EMPRESA, "m")
-    uow.oportunidades.adicionar(Oportunidade(None, bruta, agora - timedelta(hours=2), StatusOportunidade.NOVA, c))
+    uow.direto.oportunidades.adicionar(Oportunidade(None, bruta, agora - timedelta(hours=2), StatusOportunidade.NOVA, c))
 
 
 def test_resumo_antes_do_horario_nao_envia():
@@ -66,7 +66,7 @@ def test_resumo_envia_uma_vez_por_dia():
     relogio.avancar(hours=1, minutes=30)  # 09:00 BRT
     assert caso.executar() is False
     assert n.enviadas == [("Radar · bom dia", "1 oportunidade nova, 0 tarefas para hoje", f"{URL}/hoje")]
-    assert uow.configuracoes.obter_estado("ultimo_resumo") == "2026-10-23"
+    assert uow.direto.configuracoes.obter_estado("ultimo_resumo") == "2026-10-23"
 
 
 def test_resumo_no_dia_seguinte_envia_de_novo():
@@ -85,13 +85,13 @@ def test_resumo_vazio_nao_envia_mas_marca_o_dia():
     uow, n, _, caso = resumo(agora)
     assert caso.executar() is False
     assert n.enviadas == []
-    assert uow.configuracoes.obter_estado("ultimo_resumo") == "2026-10-23"
+    assert uow.direto.configuracoes.obter_estado("ultimo_resumo") == "2026-10-23"
 
 
 def test_resumo_conta_tarefas_do_painel():
     agora = datetime(2026, 10, 23, 10, 30, tzinfo=UTC)
     uow, n, _, caso = resumo(agora)
-    uow.lembretes.adicionar(Lembrete(None, "x", agora))
+    uow.direto.lembretes.adicionar(Lembrete(None, "x", agora))
     caso.executar()
     assert n.enviadas[0][1] == "0 oportunidades novas, 1 tarefa para hoje"
 
@@ -103,7 +103,7 @@ def prazos(agora, prazo=PRAZO, etapa=Etapa.ANALISANDO):
     uow = UnidadeDeTrabalhoEmMemoria()
     p = Processo.novo("Edital X", agora, prazo=prazo)
     p.etapa = etapa
-    uow.processos.adicionar(p)
+    uow.direto.processos.adicionar(p)
     n = NotificadorFalso()
     relogio = Relogio(agora)
     return uow, p, n, relogio, VerificarPrazos(uow, n, relogio, TZ, URL)
@@ -159,7 +159,7 @@ def test_falha_do_notificador_preserva_avisos_ja_confirmados():
     agora = PRAZO - timedelta(days=3)
     uow = UnidadeDeTrabalhoEmMemoria()
     for titulo in ("Um", "Dois"):
-        uow.processos.adicionar(Processo.novo(titulo, agora, prazo=PRAZO))
+        uow.direto.processos.adicionar(Processo.novo(titulo, agora, prazo=PRAZO))
 
     class NotificadorQuebrado(NotificadorFalso):
         def enviar(self, titulo, corpo, url):
@@ -170,7 +170,7 @@ def test_falha_do_notificador_preserva_avisos_ja_confirmados():
     caso = VerificarPrazos(uow, NotificadorQuebrado(), Relogio(agora), TZ, URL)
     with pytest.raises(RuntimeError):
         caso.executar()
-    um, dois = uow.processos.listar()
+    um, dois = uow.direto.processos.listar()
     assert um.avisos_prazo_enviados == {3}
     assert dois.avisos_prazo_enviados == set()
     assert uow.commits == 1

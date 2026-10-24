@@ -26,7 +26,7 @@ def test_criar_manual_sem_oportunidade():
     p = funil.criar_manual("Indicação", "Acme", Dinheiro(Decimal("500"), "BRL"), None)
     assert p.id is not None and p.oportunidade_id is None
     assert p.etapa == Etapa.ANALISANDO
-    assert uow.processos.obter(p.id) is p
+    assert uow.direto.processos.obter(p.id) is p
     assert uow.commits == 1
 
 
@@ -77,7 +77,7 @@ def test_anexar_salva_no_armazenamento_e_reabre():
 def test_vincular_contato_atualiza_os_dois_lados():
     uow, _, funil = cenario()
     p = funil.criar_manual("X", None, None, None)
-    c = uow.contatos.adicionar(Contato(None, "Ana"))
+    c = uow.direto.contatos.adicionar(Contato(None, "Ana"))
     funil.vincular_contato(p.id, c.id)
     assert p.contato_ids == {c.id}
     assert c.processo_ids == {p.id}
@@ -89,10 +89,10 @@ def test_lembretes_criar_concluir_remover():
     uow, _, funil = cenario()
     p = funil.criar_manual("X", None, None, None)
     lem = funil.criar_lembrete("enviar proposta", AGORA, p.id)
-    assert uow.lembretes.do_processo(p.id) == [lem]
+    assert uow.direto.lembretes.do_processo(p.id) == [lem]
     assert funil.concluir_lembrete(lem.id).concluido is True
     funil.remover_lembrete(lem.id)
-    assert uow.lembretes.obter(lem.id) is None
+    assert uow.direto.lembretes.obter(lem.id) is None
     with pytest.raises(NaoEncontrado):
         funil.concluir_lembrete(lem.id)
     with pytest.raises(NaoEncontrado):

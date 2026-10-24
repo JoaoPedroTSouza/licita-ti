@@ -45,7 +45,8 @@ class ColetarOportunidades:
             self._coletar_fonte(fonte, desde, resumo)
         if self._classificador is not None:
             self._classificar_pendentes(self._classificador, resumo)
-        resumo.pendentes = len(self._uow.oportunidades.pendentes(10**9))
+        with self._uow:
+            resumo.pendentes = len(self._uow.oportunidades.pendentes(10**9))
         return resumo
 
     def _coletar_fonte(
@@ -54,29 +55,34 @@ class ColetarOportunidades:
         iniciada = self._relogio.agora()
         recebidas = novas = 0
         erro = None
-        try:
-            brutas = fonte.buscar(desde)
-            recebidas = len(brutas)
-            for bruta in brutas:
-                # a chave passa a existir após o adicionar, o que cobre repetidas no lote
-                if self._uow.oportunidades.existe_chave(bruta.chave_deduplicacao()):
-                    continue
-                self._uow.oportunidades.adicionar(Oportunidade(None, bruta, iniciada))
-                novas += 1
-        except Exception as e:  # uma fonte ruim não derruba as outras
-            erro = str(e)
-            resumo.erros[fonte.nome] = erro
-        resumo.novas += novas
-        self._uow.execucoes.registrar(
-            ExecucaoFonte(fonte.nome, iniciada, self._relogio.agora(), recebidas, novas, erro)
-        )
-        self._uow.commit()
+        with self._uow:
+            try:
+                brutas = fonte.buscar(desde)
+                recebidas = len(brutas)
+                for bruta in brutas:
+                    # a chave passa a existir após o adicionar, o que cobre repetidas no lote
+                    if self._uow.oportunidades.existe_chave(bruta.chave_deduplicacao()):
+                        continue
+                    self._uow.oportunidades.adicionar(Oportunidade(None, bruta, iniciada))
+                    novas += 1
+            except Exception as e:  # uma fonte ruim não derruba as outras
+                self._uow.rollback()  # descarta o lote parcial e destrava a sessão
+                erro = str(e) or type(e).__name__
+                novas = 0
+                resumo.erros[fonte.nome] = erro
+            resumo.novas += novas
+            self._uow.execucoes.registrar(
+                ExecucaoFonte(fonte.nome, iniciada, self._relogio.agora(), recebidas, novas, erro)
+            )
+            self._uow.commit()
 
     def _classificar_pendentes(self, classificador: Classificador, resumo: ResumoColeta) -> None:
-        perfil = self._uow.configuracoes.perfil()
-        limiar = self._uow.configuracoes.ajustes().limiar_alerta
-        descartes = self._uow.oportunidades.descartes_recentes()
-        for op in self._uow.oportunidades.pendentes(self._max):
+        with self._uow:
+            perfil = self._uow.configuracoes.perfil()
+            limiar = self._uow.configuracoes.ajustes().limiar_alerta
+            descartes = self._uow.oportunidades.descartes_recentes()
+            pendentes = self._uow.oportunidades.pendentes(self._max)
+        for op in pendentes:
             try:
                 c = classificador.classificar(op.bruta, perfil, descartes)
             except ClassificacaoIndisponivel:
@@ -90,8 +96,9 @@ class ColetarOportunidades:
                 op.status = StatusOportunidade.DESCARTADA_AUTO
                 op.motivo_auto = motivo
                 resumo.descartadas_auto += 1
-            self._uow.oportunidades.salvar(op)
-            self._uow.commit()
+            with self._uow:  # um commit por item: a chamada à IA fica fora da transação
+                self._uow.oportunidades.salvar(op)
+                self._uow.commit()
             if motivo is None and c.nota >= limiar:
                 self._notificador.enviar(
                     f"Oportunidade com nota {c.nota}",

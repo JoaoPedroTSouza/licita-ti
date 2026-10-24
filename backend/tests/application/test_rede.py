@@ -54,4 +54,4 @@ def test_criar_com_nome_em_branco_levanta_erro_de_dominio():
     uow, rede = cenario()
     with pytest.raises(ErroDeDominio):
         rede.criar("   ")
-    assert uow.contatos.listar() == []
+    assert uow.direto.contatos.listar() == []

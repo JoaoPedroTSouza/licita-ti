@@ -50,8 +50,8 @@ def test_admite_remota_e_descarta_presencial():
     )
     r = c.executar()
     assert (r.novas, r.admitidas, r.descartadas_auto, r.pendentes) == (2, 1, 1, 0)
-    assert len(c.uow.oportunidades.listar(StatusOportunidade.NOVA)) == 1
-    desc = c.uow.oportunidades.listar(StatusOportunidade.DESCARTADA_AUTO)
+    assert len(c.uow.direto.oportunidades.listar(StatusOportunidade.NOVA)) == 1
+    desc = c.uow.direto.oportunidades.listar(StatusOportunidade.DESCARTADA_AUTO)
     assert desc[0].motivo_auto == MotivoDescarteAuto.NAO_REMOTA
 
 
@@ -68,7 +68,7 @@ def test_deduplica_entre_fontes():
     )
     r = c.executar()
     assert r.novas == 1
-    execs = {e.fonte: e for e in c.uow.execucoes.ultimas_por_fonte()}
+    execs = {e.fonte: e for e in c.uow.direto.execucoes.ultimas_por_fonte()}
     assert (execs["opas"].recebidas, execs["opas"].novas) == (1, 0)
 
 
@@ -84,25 +84,25 @@ def test_falha_de_uma_fonte_nao_interrompe_as_outras():
     )
     r = c.executar()
     assert r.erros == {"ruim": "layout mudou"} and r.novas == 1
-    assert {e.fonte: e.erro for e in c.uow.execucoes.ultimas_por_fonte()}["ruim"] == "layout mudou"
+    assert {e.fonte: e.erro for e in c.uow.direto.execucoes.ultimas_por_fonte()}["ruim"] == "layout mudou"
 
 
 def test_falha_do_classificador_mantem_pendente():
     c = Cenario([FonteFalsa("ungm", [bruta()])], {"a1": ClassificacaoIndisponivel("fora")})
     r = c.executar()
     assert r.pendentes == 1 and r.admitidas == 0
-    assert len(c.uow.oportunidades.listar(StatusOportunidade.PENDENTE)) == 1
+    assert len(c.uow.direto.oportunidades.listar(StatusOportunidade.PENDENTE)) == 1
     c.classificador.respostas["a1"] = classificacao()
     r = c.executar()
     assert r.novas == 0 and r.admitidas == 1 and r.pendentes == 0
-    assert len(c.uow.oportunidades.listar(StatusOportunidade.NOVA)) == 1
+    assert len(c.uow.direto.oportunidades.listar(StatusOportunidade.NOVA)) == 1
 
 
 def test_sem_classificador_nada_entra_na_entrada():
     c = Cenario([FonteFalsa("ungm", [bruta()])], classificador=None)
     r = c.executar()
     assert r.novas == 1 and r.pendentes == 1
-    assert c.uow.oportunidades.listar(StatusOportunidade.NOVA) == []
+    assert c.uow.direto.oportunidades.listar(StatusOportunidade.NOVA) == []
 
 
 def test_respeita_teto_de_classificacoes():
@@ -113,7 +113,7 @@ def test_respeita_teto_de_classificacoes():
     )
     r = c.executar()
     assert r.admitidas == 2 and r.pendentes == 3
-    assert len(c.uow.oportunidades.listar(StatusOportunidade.PENDENTE)) == 3
+    assert len(c.uow.direto.oportunidades.listar(StatusOportunidade.PENDENTE)) == 3
 
 
 def test_alerta_quando_nota_atinge_limiar():
@@ -124,7 +124,7 @@ def test_alerta_quando_nota_atinge_limiar():
     r = c.executar()
     assert r.alertas == 1 and len(c.notificador.enviadas) == 1
     titulo, corpo, url = c.notificador.enviadas[0]
-    op = c.uow.oportunidades.listar(StatusOportunidade.NOVA, None)[0]
+    op = c.uow.direto.oportunidades.listar(StatusOportunidade.NOVA, None)[0]
     assert titulo == "Oportunidade com nota 85"
     assert corpo == "Consultoria de dados — ONU"
     assert url == f"http://app/entrada/{op.id}"
@@ -140,7 +140,7 @@ def test_descarte_automatico_nunca_alerta():
 
 def test_classificador_recebe_descartes_recentes():
     c = Cenario([FonteFalsa("ungm", [bruta()])], {"a1": classificacao()})
-    antiga = c.uow.oportunidades.adicionar(
+    antiga = c.uow.direto.oportunidades.adicionar(
         Oportunidade(
             None, bruta("old", titulo="Velha"), AGORA, status=StatusOportunidade.DESCARTADA,
             motivo_usuario="muito júnior",

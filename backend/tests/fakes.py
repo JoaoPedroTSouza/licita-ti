@@ -134,7 +134,9 @@ class RepositorioCotacoesEmMemoria:
         return {m: v for m, (_, v) in self._por_moeda.items()}
 
 
-class UnidadeDeTrabalhoEmMemoria:
+class _Repositorios:
+    """Os repositórios do fake; `uow.direto` os expõe aos testes fora de `with`."""
+
     def __init__(self) -> None:
         self.oportunidades = RepositorioOportunidadesEmMemoria()
         self.processos = RepositorioProcessosEmMemoria()
@@ -143,17 +145,32 @@ class UnidadeDeTrabalhoEmMemoria:
         self.configuracoes = RepositorioConfiguracoesEmMemoria()
         self.execucoes = RepositorioExecucoesEmMemoria()
         self.cotacoes = RepositorioCotacoesEmMemoria()
-        self.commits = 0
-        self.rollbacks = 0
-        self._instantaneo = self._copiar()
+
+
+class UnidadeDeTrabalhoEmMemoria:
+    """Como a SQL: os repositórios só existem dentro de `with`."""
 
     _REPOSITORIOS = (
         "oportunidades", "processos", "lembretes", "contatos",
         "configuracoes", "execucoes", "cotacoes",
     )
 
+    def __init__(self) -> None:
+        self.direto = _Repositorios()
+        self.commits = 0
+        self.rollbacks = 0
+        self._dentro = False
+        self._instantaneo = self._copiar()
+
+    def __getattr__(self, nome: str):
+        if nome in UnidadeDeTrabalhoEmMemoria._REPOSITORIOS:
+            if not self._dentro:
+                raise RuntimeError(f"repositório usado fora de with: {nome}")
+            return getattr(self.direto, nome)
+        raise AttributeError(nome)
+
     def _copiar(self) -> dict:
-        return {n: deepcopy(vars(getattr(self, n))) for n in self._REPOSITORIOS}
+        return {n: deepcopy(vars(getattr(self.direto, n))) for n in self._REPOSITORIOS}
 
     def commit(self) -> None:
         self.commits += 1
@@ -163,14 +180,20 @@ class UnidadeDeTrabalhoEmMemoria:
         """Como o banco: descarta o que não foi confirmado desde o último commit."""
         self.rollbacks += 1
         for nome, estado in self._instantaneo.items():
-            vars(getattr(self, nome)).update(deepcopy(estado))
+            vars(getattr(self.direto, nome)).update(deepcopy(estado))
 
     def __enter__(self):
+        if self._dentro:
+            raise RuntimeError("unidade de trabalho já aberta")
+        self._dentro = True
         return self
 
     def __exit__(self, tipo, erro, traco) -> None:
-        if tipo is not None:
-            self.rollback()
+        try:
+            if tipo is not None:
+                self.rollback()
+        finally:
+            self._dentro = False
 
 
 class FonteFalsa:

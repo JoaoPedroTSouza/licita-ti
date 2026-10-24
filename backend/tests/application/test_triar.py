@@ -24,7 +24,7 @@ def cenario():
         fonte="ungm", id_externo="a", titulo="Consultoria de dados", organizacao="ONU",
         link="http://x", texto="t", prazo=PRAZO, valor=VALOR,
     )
-    op = uow.oportunidades.adicionar(Oportunidade(
+    op = uow.direto.oportunidades.adicionar(Oportunidade(
         None, bruta, AGORA, status=StatusOportunidade.NOVA,
         classificacao=Classificacao(
             True, 90, "r", Modalidade.REMOTO_TOTAL, "t", "en", TipoContratacao.EMPRESA, "m",
@@ -62,7 +62,7 @@ def test_descartar_guarda_motivo_e_entra_nos_descartes_recentes():
     triar.descartar(op.id, "valor baixo")
     assert op.status == StatusOportunidade.DESCARTADA
     assert op.motivo_usuario == "valor baixo"
-    assert [d.motivo for d in uow.oportunidades.descartes_recentes()] == ["valor baixo"]
+    assert [d.motivo for d in uow.direto.oportunidades.descartes_recentes()] == ["valor baixo"]
     assert uow.commits == 1
 
 
