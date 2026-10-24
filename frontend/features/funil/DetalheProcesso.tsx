@@ -164,6 +164,7 @@ export default function DetalheProcesso({
 }) {
   const [p, setP] = useState<Processo | null>(null);
   const [erro, setErro] = useState(false);
+  const [versao, setVersao] = useState(0);
 
   const carregar = useCallback(async () => {
     try {
@@ -181,6 +182,7 @@ export default function DetalheProcesso({
   /** Depois de qualquer mutação: atualiza o detalhe e o quadro. */
   const atualizar = useCallback(async () => {
     await Promise.all([carregar(), aoMudar()]);
+    setVersao((v) => v + 1); // refaz os campos a partir do que o servidor guardou
   }, [carregar, aoMudar]);
 
   let corpo: React.ReactNode;
@@ -197,9 +199,9 @@ export default function DetalheProcesso({
     corpo = (
       <div className="flex flex-col gap-6">
         <Mover p={p} aoMudar={atualizar} />
-        {/* A chave remonta os campos quando o servidor devolve dados novos. */}
+        {/* A chave remonta os campos depois de cada mutação, para nunca contradizer o servidor. */}
         <Campos
-          key={`${p.titulo}|${p.organizacao}|${p.link}|${p.prazo}|${p.valor?.valor}|${p.valor?.moeda}`}
+          key={versao}
           p={p}
           aoMudar={atualizar}
         />

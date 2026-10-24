@@ -35,6 +35,17 @@ def test_editar_so_campos_enviados(cliente_logado):
     assert r.json()["titulo"] == "Novo" and r.json()["organizacao"] == "ONU"
 
 
+def test_editar_null_limpa_campos(cliente_logado):
+    p = criar(cliente_logado, organizacao="ONU", prazo="2030-01-01T12:00:00Z")
+    pid = p["id"]
+    r = cliente_logado.patch(f"/api/processos/{pid}", json={"prazo": None})
+    assert r.status_code == 200
+    assert cliente_logado.get(f"/api/processos/{pid}").json()["prazo"] is None
+    r = cliente_logado.patch(f"/api/processos/{pid}", json={"organizacao": None})
+    d = cliente_logado.get(f"/api/processos/{pid}").json()
+    assert r.status_code == 200 and d["organizacao"] is None and d["titulo"] == "Consultoria X"
+
+
 def test_nota(cliente_logado):
     p = criar(cliente_logado)
     r = cliente_logado.post(f"/api/processos/{p['id']}/notas", json={"texto": "ligar amanhã"})

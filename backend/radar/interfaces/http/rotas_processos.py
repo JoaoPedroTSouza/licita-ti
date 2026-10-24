@@ -59,8 +59,8 @@ def detalhar(processo_id: int, c: Container = Depends(obter_container)):
 
 @router.patch("/{processo_id}", response_model=ProcessoDTO)
 def editar(processo_id: int, corpo: ProcessoEdicaoIn, c: Container = Depends(obter_container)):
-    """Altera só os campos presentes no corpo. Limpar um campo (enviar null) não é
-    suportado: `Funil.editar` trata None como "não mudar"."""
+    """Altera só os campos presentes no corpo; enviar null limpa organizacao, valor,
+    prazo ou link (o título não pode ser limpo)."""
     campos = {k: getattr(corpo, k) for k in corpo.model_fields_set}
     if campos.get("valor") is not None:
         campos["valor"] = corpo.valor.para_dominio()

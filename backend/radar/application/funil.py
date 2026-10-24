@@ -1,11 +1,15 @@
 """Casos de uso do funil: processos, notas, arquivos, contatos vinculados e lembretes."""
 from datetime import datetime
+from typing import Any
 
 from radar.application.portas import ArmazenamentoArquivos, Relogio, UnidadeDeTrabalho
 from radar.domain.dinheiro import Dinheiro
 from radar.domain.erros import NaoEncontrado
 from radar.domain.lembrete import Lembrete
 from radar.domain.processo import Arquivo, Etapa, Processo
+
+
+_MANTER: Any = object()  # "campo não enviado": diferente de None, que limpa o campo
 
 
 class Funil:
@@ -28,21 +32,23 @@ class Funil:
             return processo
 
     def editar(
-        self, processo_id: int, *, titulo: str | None = None, organizacao: str | None = None,
-        valor: Dinheiro | None = None, prazo: datetime | None = None, link: str | None = None,
+        self, processo_id: int, *, titulo: str | None = None, organizacao: str | None = _MANTER,
+        valor: Dinheiro | None = _MANTER, prazo: datetime | None = _MANTER,
+        link: str | None = _MANTER,
     ) -> Processo:
+        """Campos omitidos ficam como estão; passar None limpa organizacao, valor, prazo ou link."""
         with self._uow:
             p = self._processo(processo_id)
             if titulo is not None:
                 p.titulo = titulo
-            if organizacao is not None:
+            if organizacao is not _MANTER:
                 p.organizacao = organizacao
-            if valor is not None:
+            if valor is not _MANTER:
                 p.valor = valor
-            if prazo is not None and prazo != p.prazo:
+            if prazo is not _MANTER and prazo != p.prazo:
                 p.prazo = prazo
                 p.avisos_prazo_enviados.clear()
-            if link is not None:
+            if link is not _MANTER:
                 p.link = link
             self._uow.processos.salvar(p)
             self._uow.commit()

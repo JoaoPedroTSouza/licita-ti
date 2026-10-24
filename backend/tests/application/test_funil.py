@@ -40,6 +40,17 @@ def test_mudar_prazo_reinicia_avisos():
     assert p.avisos_prazo_enviados == set()
 
 
+def test_limpar_prazo_reinicia_avisos_e_omitidos_ficam():
+    _, _, funil = cenario()
+    p = funil.criar_manual("X", "Acme", Dinheiro(Decimal("5"), "BRL"), AGORA + timedelta(days=5))
+    p.avisos_prazo_enviados.add(3)
+    funil.editar(p.id, titulo="Y")
+    assert p.prazo is not None and p.organizacao == "Acme" and p.valor is not None
+    funil.editar(p.id, prazo=None, valor=None, organizacao=None)
+    assert p.prazo is None and p.valor is None and p.organizacao is None
+    assert p.avisos_prazo_enviados == set()
+
+
 def test_mover_e_anotar():
     _, _, funil = cenario()
     p = funil.criar_manual("X", None, None, None)
