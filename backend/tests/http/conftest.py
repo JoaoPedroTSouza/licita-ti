@@ -32,10 +32,13 @@ class ClassificadorMudo:
         raise AssertionError("não deveria classificar")
 
 
-def montar_container(tmp_path, *, com_ia: bool = True, enviar=None) -> Container:
+def montar_container(
+    tmp_path, *, com_ia: bool = True, enviar=None, arquivo_max_mb: int = 20
+) -> Container:
     settings = Settings(
         _env_file=None, app_password=SENHA, jwt_secret="segredo-de-teste",
         database_url="sqlite+pysqlite:///:memory:", anthropic_api_key="x" if com_ia else "",
+        arquivo_max_mb=arquivo_max_mb,
     )
     engine = criar_engine(settings.database_url)
     criar_tabelas(engine)
@@ -98,3 +101,18 @@ def cliente_logado(container):
 @pytest.fixture
 def cliente_logado_sem_classificador(tmp_path):
     return _logado(montar_container(tmp_path, com_ia=False))
+
+
+@pytest.fixture
+def cliente_logado_limite_1mb(tmp_path):
+    return _logado(montar_container(tmp_path, arquivo_max_mb=1))
+
+
+@pytest.fixture
+def envios():
+    return []
+
+
+@pytest.fixture
+def cliente_logado_push(tmp_path, envios):
+    return _logado(montar_container(tmp_path, enviar=lambda **kw: envios.append(kw)))

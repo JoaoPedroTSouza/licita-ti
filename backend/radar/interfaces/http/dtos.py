@@ -3,15 +3,16 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime, time
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import AwareDatetime, BaseModel, Field, field_validator
 
 from radar.application.painel import ItemParaFazer, PainelDoDia
 from radar.application.portas import ExecucaoFonte
+from radar.domain.contato import Contato
 from radar.domain.dinheiro import Dinheiro, converter_para_brl
 from radar.domain.lembrete import Lembrete
 from radar.domain.oportunidade import Oportunidade
 from radar.domain.perfil import Ajustes, Perfil
-from radar.domain.processo import Processo
+from radar.domain.processo import Arquivo, Etapa, Processo
 
 
 def _utc(dt: datetime | None) -> datetime | None:
@@ -267,3 +268,116 @@ def execucao_dto(e: ExecucaoFonte) -> ExecucaoFonteDTO:
         fonte=e.fonte, finalizada_em=_utc(e.finalizada_em), recebidas=e.recebidas,
         novas=e.novas, erro=e.erro,
     )
+
+
+class ProcessoResumoDTO(BaseModel):
+    id: int
+    titulo: str
+    organizacao: str | None
+    etapa: str
+    valor: ValorDTO | None
+    valor_brl: Decimal | None
+    prazo: datetime | None
+
+
+def processo_resumo_dto(p: Processo, taxas: Mapping[str, Decimal]) -> ProcessoResumoDTO:
+    return ProcessoResumoDTO(
+        id=p.id, titulo=p.titulo, organizacao=p.organizacao, etapa=p.etapa.value,
+        valor=valor_dto(p.valor),
+        valor_brl=converter_para_brl(p.valor, taxas) if p.valor else None,
+        prazo=_utc(p.prazo),
+    )
+
+
+class ContatoDTO(BaseModel):
+    id: int
+    nome: str
+    organizacao: str | None
+    como_conheceu: str | None
+    ultimo_contato: date | None
+    frequencia_dias: int | None
+    atrasado: bool
+    processo_ids: list[int]
+
+
+def contato_dto(c: Contato, hoje: date) -> ContatoDTO:
+    return ContatoDTO(
+        id=c.id, nome=c.nome, organizacao=c.organizacao, como_conheceu=c.como_conheceu,
+        ultimo_contato=c.ultimo_contato, frequencia_dias=c.frequencia_dias,
+        atrasado=c.atrasado(hoje), processo_ids=sorted(c.processo_ids),
+    )
+
+
+# ------------------------------------------------- entrada: funil, rede e push
+
+class ValorIn(BaseModel):
+    valor: Decimal
+    moeda: str = Field(min_length=3, max_length=3)
+
+    def para_dominio(self) -> Dinheiro:
+        return Dinheiro(self.valor, self.moeda)
+
+
+class ProcessoNovoIn(BaseModel):
+    titulo: str = Field(min_length=1)
+    organizacao: str | None = None
+    valor: ValorIn | None = None
+    prazo: AwareDatetime | None = None
+
+
+class ProcessoEdicaoIn(BaseModel):
+    titulo: str | None = None
+    organizacao: str | None = None
+    valor: ValorIn | None = None
+    prazo: AwareDatetime | None = None
+    link: str | None = None
+
+
+class EtapaIn(BaseModel):
+    etapa: Etapa
+
+
+class NotaIn(BaseModel):
+    texto: str
+
+
+class LembreteIn(BaseModel):
+    texto: str = Field(min_length=1)
+    vence_em: AwareDatetime
+    processo_id: int | None = None
+
+
+class ContatoNovoIn(BaseModel):
+    nome: str
+    organizacao: str | None = None
+    como_conheceu: str | None = None
+    frequencia_dias: int | None = Field(default=None, ge=1)
+
+
+class ContatoEdicaoIn(BaseModel):
+    nome: str | None = None
+    organizacao: str | None = None
+    como_conheceu: str | None = None
+    frequencia_dias: int | None = Field(default=None, ge=1)
+
+
+class ChavesPushIn(BaseModel):
+    p256dh: str
+    auth: str
+
+
+class InscricaoPushIn(BaseModel):
+    endpoint: str
+    keys: ChavesPushIn
+
+
+class ChavePublicaDTO(BaseModel):
+    chave: str
+
+
+class EntreguesDTO(BaseModel):
+    entregues: int
+
+
+def arquivo_dto(a: Arquivo) -> ArquivoDTO:
+    return ArquivoDTO(id=a.id, nome=a.nome, tamanho=a.tamanho, enviado_em=_utc(a.enviado_em))

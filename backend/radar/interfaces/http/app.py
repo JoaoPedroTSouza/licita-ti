@@ -5,7 +5,10 @@ from fastapi.responses import JSONResponse
 from radar.config import get_settings
 from radar.container import Container
 from radar.domain.erros import ErroDeDominio, NaoEncontrado
-from radar.interfaces.http import rotas_ajustes, rotas_oportunidades, rotas_painel
+from radar.interfaces.http import (
+    rotas_ajustes, rotas_contatos, rotas_lembretes, rotas_oportunidades, rotas_painel,
+    rotas_processos, rotas_push,
+)
 from radar.interfaces.http.auth import (
     exigir_login, gerar_token, obter_container, senha_confere,
 )
@@ -41,6 +44,8 @@ def criar_app(container: Container | None = None) -> FastAPI:
     protegido.include_router(rotas_oportunidades.router)
     protegido.include_router(rotas_painel.router)
     protegido.include_router(rotas_ajustes.router)
+    for modulo in (rotas_processos, rotas_lembretes, rotas_contatos, rotas_push):
+        protegido.include_router(modulo.router)
     api.include_router(protegido)
     app.include_router(api)
     return app
