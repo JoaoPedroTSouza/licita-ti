@@ -1,3 +1,5 @@
+import ListaEntrada from "@/features/entrada/ListaEntrada";
+
 export default function Pagina() {
-  return <h1 className="text-2xl font-bold tracking-tight">Entrada</h1>;
+  return <ListaEntrada />;
 }
