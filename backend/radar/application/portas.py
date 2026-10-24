@@ -49,6 +49,10 @@ class Classificador(Protocol):
     ) -> Classificacao: ...
 
 
+class FonteDeCotacoes(Protocol):
+    def cotacao(self, moeda: str, ate: date) -> tuple[date, Decimal] | None: ...
+
+
 class Notificador(Protocol):
     def enviar(self, titulo: str, corpo: str, url: str) -> int: ...
 
