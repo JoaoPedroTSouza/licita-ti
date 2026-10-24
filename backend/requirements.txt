@@ -9,5 +9,7 @@ pywebpush==2.0.*
 py-vapid==1.9.*
 pyjwt==2.10.*
 apscheduler==3.10.*
+beautifulsoup4==4.12.*
+python-multipart==0.0.*
 tzdata
 pytest==8.*
