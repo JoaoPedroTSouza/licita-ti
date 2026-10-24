@@ -1,10 +1,10 @@
-/* Service worker do Licita TI: cache para uso offline + notificações push. */
-const VERSAO = "v2";
+/* Service worker do Radar: cache para uso offline + notificações push. */
+const VERSAO = "v3";
 const CACHE_SHELL = `shell-${VERSAO}`;
 const CACHE_DADOS = `dados-${VERSAO}`;
 const CACHE_ESTATICO = `estatico-${VERSAO}`;
 
-const SHELL = ["/", "/editais", "/ideias", "/acompanhamento", "/ajustes", "/login", "/manifest.webmanifest", "/icons/icon-192.png"];
+const SHELL = ["/hoje", "/entrada", "/funil", "/rede", "/ajustes", "/login", "/manifest.webmanifest", "/icons/icon-192.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -65,10 +65,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Páginas: rede primeiro; offline cai no cache ou na página inicial
+  // Páginas: rede primeiro; offline cai no cache ou em Hoje
   if (req.mode === "navigate") {
     event.respondWith(
-      redePrimeiro(req, CACHE_SHELL).catch(async () => (await caches.match("/")) || Response.error())
+      redePrimeiro(req, CACHE_SHELL).catch(async () => (await caches.match("/hoje")) || Response.error())
     );
   }
 });
@@ -80,7 +80,7 @@ self.addEventListener("push", (event) => {
   } catch {
     dados = { body: event.data ? event.data.text() : "" };
   }
-  const titulo = dados.title || "Licita TI";
+  const titulo = dados.title || "Radar";
   event.waitUntil(
     self.registration.showNotification(titulo, {
       body: dados.body || "",

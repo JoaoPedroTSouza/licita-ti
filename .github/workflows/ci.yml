@@ -37,7 +37,7 @@ jobs:
         run: pytest -q --maxfail=5
 
   frontend:
-    name: Frontend (build + tipos)
+    name: Frontend (testes + build + tipos)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -53,6 +53,9 @@ jobs:
 
       - name: Instalar dependências
         run: npm install --no-audit --no-fund
+
+      - name: Testes
+        run: npm test
 
       - name: Checar tipos
         run: npx tsc --noEmit

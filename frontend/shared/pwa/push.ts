@@ -1,4 +1,5 @@
-import { api } from "./api";
+import { push } from "../api/cliente";
+import type { InscricaoPush } from "../api/tipos";
 
 function base64UrlParaUint8(base64: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -23,10 +24,10 @@ export async function inscricaoAtual(): Promise<PushSubscription | null> {
 export async function ativarPush(): Promise<void> {
   if (!pushSuportado()) throw new Error("Este navegador não suporta notificações push.");
   const permissao = await Notification.requestPermission();
-  if (permissao !== "granted") throw new Error("Permissão de notificação negada. Libere nas configurações do Chrome.");
+  if (permissao !== "granted") throw new Error("Permissão de notificação negada. Libere nas configurações do navegador.");
 
   const reg = await navigator.serviceWorker.ready;
-  const { chave } = await api<{ chave: string }>("/push/chave-publica");
+  const { chave } = await push.chavePublica();
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {
     sub = await reg.pushManager.subscribe({
@@ -34,12 +35,11 @@ export async function ativarPush(): Promise<void> {
       applicationServerKey: base64UrlParaUint8(chave),
     });
   }
-  await api("/push/inscrever", { method: "POST", body: JSON.stringify(sub.toJSON()) });
+  await push.inscrever(sub.toJSON() as InscricaoPush);
 }
 
+/** Cancela a inscrição neste aparelho; o servidor descarta endpoints expirados sozinho. */
 export async function desativarPush(): Promise<void> {
   const sub = await inscricaoAtual();
-  if (!sub) return;
-  await api("/push/cancelar", { method: "POST", body: JSON.stringify(sub.toJSON()) }).catch(() => {});
-  await sub.unsubscribe();
+  if (sub) await sub.unsubscribe();
 }

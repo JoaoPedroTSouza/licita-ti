@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { api, setToken } from "@/lib/api";
+import { auth, setToken } from "@/shared/api/cliente";
+import Botao from "@/shared/ui/Botao";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,9 +16,9 @@ export default function LoginPage() {
     setErro("");
     setCarregando(true);
     try {
-      const { token } = await api<{ token: string }>("/auth/login", { method: "POST", body: JSON.stringify({ senha }) });
+      const { token } = await auth.login(senha);
       setToken(token);
-      router.replace("/");
+      router.replace("/hoje");
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Não foi possível entrar.");
     } finally {
@@ -28,10 +29,10 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-dvh items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <img src="/icons/icon-192.png" alt="" width={56} height={56} className="mb-6 rounded-2xl" />
-        <h1 className="text-[28px] font-bold leading-tight tracking-tight">Licita TI</h1>
+        <img src="/icons/icon-192.png" alt="" width={56} height={56} className="mb-6 rounded-xl" />
+        <h1 className="text-[28px] font-bold leading-tight tracking-tight">Radar</h1>
         <p className="suave mb-8 mt-2 text-[15px] leading-relaxed">
-          Editais de desenvolvimento web e consultoria de TI, prazos e ideias num só lugar.
+          Oportunidades remotas, funil e lembretes num só lugar.
         </p>
         <form onSubmit={entrar} className="space-y-3">
           <label className="block">
@@ -45,10 +46,10 @@ export default function LoginPage() {
               autoFocus
             />
           </label>
-          {erro && <p className="rounded-lg bg-vermelho-suave px-3 py-2 text-sm text-vermelho-texto">{erro}</p>}
-          <button className="botao w-full" disabled={!senha || carregando}>
+          {erro && <p className="rounded-lg bg-perigo-suave px-3 py-2 text-sm text-perigo">{erro}</p>}
+          <Botao type="submit" className="w-full" disabled={!senha || carregando}>
             {carregando ? "Entrando…" : "Entrar"}
-          </button>
+          </Botao>
         </form>
       </div>
     </main>

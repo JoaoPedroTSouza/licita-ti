@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Botao from "../ui/Botao";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -29,13 +30,12 @@ export default function InstalarApp() {
 
   return (
     <div className="cartao mb-4 flex items-center gap-3 p-3">
-      <img src="/icons/icon-192.png" alt="" width={40} height={40} className="rounded-xl" />
+      <img src="/icons/icon-192.png" alt="" width={40} height={40} className="rounded-lg" />
       <div className="flex-1 text-sm">
-        <p className="font-semibold">Instale o Licita TI</p>
-        <p className="suave text-xs">Abre em tela cheia e recebe alertas de editais.</p>
+        <p className="font-semibold">Instale o Radar</p>
+        <p className="suave text-xs">Abre em tela cheia e recebe os lembretes.</p>
       </div>
-      <button
-        className="botao px-3 py-2 text-sm"
+      <Botao
         onClick={async () => {
           await evento.prompt();
           await evento.userChoice;
@@ -43,7 +43,7 @@ export default function InstalarApp() {
         }}
       >
         Instalar
-      </button>
+      </Botao>
     </div>
   );
 }
