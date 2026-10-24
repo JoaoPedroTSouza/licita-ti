@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-    branches-ignore: ["capturas"]
   pull_request:
   workflow_dispatch:
 

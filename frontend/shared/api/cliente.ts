@@ -56,6 +56,11 @@ async function requisitar(caminho: string, opcoes: RequestInit): Promise<Respons
     try {
       const j = await resp.json();
       if (typeof j.detail === "string") msg = j.detail;
+      else if (Array.isArray(j.detail)) {
+        // Validação do FastAPI: lista de {loc, msg}.
+        const msgs = j.detail.map((d: { msg?: unknown }) => d?.msg).filter((m: unknown) => typeof m === "string");
+        if (msgs.length) msg = msgs.join("; ");
+      }
     } catch {}
     throw new ErroApi(resp.status, msg);
   }
