@@ -60,3 +60,16 @@ export function formatarPrazo(iso: string | null, agora: Date): string {
   if (dias < 7) return `em ${dias} dias`;
   return `${String(alvo.dia).padStart(2, "0")}/${MESES[alvo.mes - 1]}`;
 }
+
+const DIAS_SEMANA = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+const MESES_LONGOS = [
+  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+];
+
+/** "2026-10-23" -> "Quinta, 23 de outubro" (calendário puro, sem fuso). */
+export function formatarDiaPorExtenso(dia: string): string {
+  const [ano, mes, d] = dia.split("-").map(Number);
+  const semana = DIAS_SEMANA[new Date(Date.UTC(ano, mes - 1, d)).getUTCDay()];
+  return `${semana[0].toUpperCase()}${semana.slice(1)}, ${d} de ${MESES_LONGOS[mes - 1]}`;
+}

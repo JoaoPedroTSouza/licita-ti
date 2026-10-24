@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ETAPAS, formatarAproxBrl, formatarDinheiro, formatarPrazo } from "./formato";
+import { ETAPAS, formatarAproxBrl, formatarDiaPorExtenso, formatarDinheiro, formatarPrazo } from "./formato";
 
 describe("formatarDinheiro", () => {
   it("formata BRL e USD", () => {
@@ -76,5 +76,13 @@ describe("ETAPAS", () => {
     expect(ETAPAS.map((e) => e.rotulo)).toEqual([
       "Analisando", "Proposta enviada", "Negociação", "Fechado", "Perdido",
     ]);
+  });
+});
+
+describe("formatarDiaPorExtenso", () => {
+  it("escreve dia da semana, dia e mês, com inicial maiúscula", () => {
+    expect(formatarDiaPorExtenso("2026-10-23")).toBe("Sexta, 23 de outubro");
+    expect(formatarDiaPorExtenso("2026-03-01")).toBe("Domingo, 1 de março");
+    expect(formatarDiaPorExtenso("2026-12-31")).toBe("Quinta, 31 de dezembro");
   });
 });

@@ -1,3 +1,5 @@
+import PainelDoDia from "@/features/hoje/PainelDoDia";
+
 export default function Pagina() {
-  return <h1 className="text-2xl font-bold tracking-tight">Hoje</h1>;
+  return <PainelDoDia />;
 }
