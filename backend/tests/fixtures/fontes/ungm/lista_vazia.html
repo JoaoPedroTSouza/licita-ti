@@ -1,0 +1,13 @@
+
+
+<script type="text/javascript">
+    // set total value to label               
+    var noticeTotal = "";
+    var noticeSearchTotalLabelId = "#noticeSearchTotal";    
+
+    var noticeSearchScript = new UNGM.Notice.NoticeSearch({
+        lblNoticeSearchTotalSelector: noticeSearchTotalLabelId
+     });
+    noticeSearchScript.ReAssignSearchTotal(noticeSearchScript.parameter, noticeTotal);
+
+</script>
