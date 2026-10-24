@@ -14,6 +14,12 @@
   --acento-suave: #e6efeb;
   --acento-texto: #2f5d50;
 
+  --acao: #2f5d50;
+  --acao-hover: #244a40;
+  --acao-perigo: #b3372f;
+  --acao-perigo-hover: #962d27;
+  --texto-sobre-acao: #ffffff;
+
   --perigo: #b3372f;
   --perigo-suave: #fbeceb;
   --aviso-suave: #fbf3e1;
@@ -36,6 +42,12 @@
     --acento-suave: #1d2d27;
     --acento-texto: #a3d1c1;
 
+    /* Preenchimentos escuros com texto branco: contraste >= 4.5:1 */
+    --acao: #2f6b5a;
+    --acao-hover: #3a7d6a;
+    --acao-perigo: #b3372f;
+    --acao-perigo-hover: #c4443c;
+
     --perigo: #ee8a83;
     --perigo-suave: #371c1a;
     --aviso-suave: #302710;
@@ -56,6 +68,8 @@
   --color-acento-forte: var(--acento-forte);
   --color-acento-suave: var(--acento-suave);
   --color-acento-texto: var(--acento-texto);
+  --color-acao: var(--acao);
+  --color-texto-sobre-acao: var(--texto-sobre-acao);
   --color-perigo: var(--perigo);
   --color-perigo-suave: var(--perigo-suave);
   --color-aviso-suave: var(--aviso-suave);
@@ -115,12 +129,12 @@ body {
     padding: 0.55rem 1rem;
     font-weight: 600;
     font-size: 0.9rem;
-    background: var(--acento);
-    color: #fff;
+    background: var(--acao);
+    color: var(--texto-sobre-acao);
     transition: background 0.15s;
   }
   .botao:hover {
-    background: var(--acento-forte);
+    background: var(--acao-hover);
   }
   .botao:disabled {
     opacity: 0.5;
@@ -135,12 +149,11 @@ body {
     background: var(--superficie-2);
   }
   .botao-perigo {
-    background: var(--perigo);
-    color: #fff;
+    background: var(--acao-perigo);
+    color: var(--texto-sobre-acao);
   }
   .botao-perigo:hover {
-    background: var(--perigo);
-    filter: brightness(0.92);
+    background: var(--acao-perigo-hover);
   }
 }
 

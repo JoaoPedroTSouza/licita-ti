@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { setToken } from "@/shared/api/cliente";
+import { encerrarSessao } from "@/shared/api/cliente";
+import { useContagemEntrada } from "./ContagemEntrada";
 
 type Item = { href: string; rotulo: string; icone: (p: { ativo: boolean }) => React.ReactElement };
 
@@ -20,7 +21,8 @@ const estaAtivo = (href: string, pathname: string) => pathname === href || pathn
  * Desktop (>= 1024px): menu lateral com Ajustes no rodapé.
  * Abaixo disso: barra superior com Ajustes e barra inferior com os quatro itens.
  */
-export default function Navegacao({ novas }: { novas: number }) {
+export default function Navegacao() {
+  const { contagem: novas } = useContagemEntrada();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -40,7 +42,7 @@ export default function Navegacao({ novas }: { novas: number }) {
           <ItemLateral item={AJUSTES} pathname={pathname} novas={0} />
           <button
             onClick={() => {
-              setToken(null);
+              void encerrarSessao();
               router.replace("/login");
             }}
             className="suave w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-superficie-2"
@@ -113,7 +115,7 @@ function Contagem({ n, flutuante = false }: { n: number; flutuante?: boolean }) 
   return (
     <span
       aria-label={`${n} novas`}
-      className={`tabular rounded-full bg-acento px-1.5 text-[11px] font-semibold leading-[18px] text-white ${
+      className={`tabular rounded-full bg-acao px-1.5 text-[11px] font-semibold leading-[18px] text-texto-sobre-acao ${
         flutuante ? "absolute right-[22%] top-1.5" : ""
       }`}
     >

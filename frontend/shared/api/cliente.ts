@@ -17,6 +17,15 @@ export function setToken(token: string | null) {
   else localStorage.removeItem(CHAVE_TOKEN);
 }
 
+/** Sai da conta: apaga o token e os dados em cache do service worker (`dados-*`). */
+export async function encerrarSessao(): Promise<void> {
+  setToken(null);
+  if (typeof caches === "undefined") return;
+  try {
+    for (const nome of await caches.keys()) if (nome.startsWith("dados-")) await caches.delete(nome);
+  } catch {}
+}
+
 export class ErroApi extends Error {
   constructor(public status: number, mensagem: string) {
     super(mensagem);
@@ -36,7 +45,7 @@ function cabecalhos(opcoes: RequestInit): Headers {
 async function requisitar(caminho: string, opcoes: RequestInit): Promise<Response> {
   const resp = await fetch(`/api${caminho}`, { ...opcoes, headers: cabecalhos(opcoes) });
   if (resp.status === 401 && !caminho.startsWith("/auth/")) {
-    setToken(null);
+    void encerrarSessao();
     if (typeof window !== "undefined" && window.location.pathname !== "/login") {
       window.location.href = "/login";
     }
