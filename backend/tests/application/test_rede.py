@@ -48,3 +48,10 @@ def test_contato_inexistente_levanta_nao_encontrado():
         rede.editar(99, nome="x")
     with pytest.raises(NaoEncontrado):
         rede.registrar_contato(99)
+
+
+def test_criar_com_nome_em_branco_levanta_erro_de_dominio():
+    uow, rede = cenario()
+    with pytest.raises(ErroDeDominio):
+        rede.criar("   ")
+    assert uow.contatos.listar() == []

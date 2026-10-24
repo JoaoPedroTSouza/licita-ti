@@ -52,10 +52,9 @@ class Rede:
 
     def listar(self) -> list[Contato]:
         hoje = self._relogio.agora().astimezone(self._tz).date()
-        return sorted(
-            self._uow.contatos.listar(),
-            key=lambda c: (not c.atrasado(hoje), c.nome.casefold()),
-        )
+        with self._uow:
+            contatos = self._uow.contatos.listar()
+        return sorted(contatos, key=lambda c: (not c.atrasado(hoje), c.nome.casefold()))
 
     def _contato(self, contato_id: int) -> Contato:
         contato = self._uow.contatos.obter(contato_id)
