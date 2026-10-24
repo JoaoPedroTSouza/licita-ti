@@ -6,7 +6,7 @@ Workspace pessoal, em formato PWA, para encontrar e acompanhar **oportunidades d
 
 ## O que o Radar faz
 
-A tela tem três áreas de trabalho, mais os ajustes:
+A tela tem quatro áreas de trabalho, mais os ajustes:
 
 - **Hoje**: o que fazer agora. Lembretes e prazos do dia, as melhores oportunidades novas e um resumo do funil.
 - **Entrada**: oportunidades novas já avaliadas pela IA, com nota, resumo e motivos. Você decide: **Me interessa** (vira um processo no funil) ou **Descartar** (com motivo opcional).
@@ -43,7 +43,7 @@ Frontend em Next.js (`frontend/`): `app/` só compõe as rotas, `features/<área
 | UNGM (ONU) | ativa |
 | OPAS Brasil | ativa |
 | Banco Mundial | ativa |
-| ReliefWeb | **desativada**: a API v2 exige um `appname` aprovado pela ReliefWeb. Detalhes e como ativar em [docs/fontes/reliefweb.md](docs/fontes/reliefweb.md) |
+| ReliefWeb | **não implementada**: a API v2 exige um `appname` aprovado pela ReliefWeb; ver [docs/fontes/reliefweb.md](docs/fontes/reliefweb.md) |
 
 O worker coleta ao subir e depois nos horários de `COLETA_HORARIOS` (horário de Brasília). Em **Ajustes → Fontes** você vê a última execução de cada uma, quantas oportunidades recebeu e o erro, se houve.
 
@@ -52,6 +52,7 @@ O worker coleta ao subir e depois nos horários de `COLETA_HORARIOS` (horário d
 ```bash
 cp .env.example .env
 # edite APP_PASSWORD, JWT_SECRET e, para a IA, ANTHROPIC_API_KEY
+# (a API e o worker não sobem com a senha/segredo de exemplo nem com JWT_SECRET < 32 caracteres)
 
 docker compose build
 docker compose run --rm api python -m radar.interfaces.gen_vapid   # cole as 2 linhas no .env
@@ -112,7 +113,7 @@ Abra a URL `https://….trycloudflare.com` no Chrome do Android.
 # no .env: DOMAIN=radar.seudominio.com.br  (DNS tipo A apontando para o VPS)
 docker compose --profile https up -d
 ```
-O Caddy emite o certificado automaticamente. Feche a porta 8000 no firewall; o app acessa a API pelo próprio domínio (`/api`).
+O Caddy emite o certificado automaticamente. A API só é publicada em `127.0.0.1:8000` (não fica exposta na rede); o app acessa a API pelo próprio domínio (`/api`).
 
 No Chrome do Android: abra o site, toque em **Instalar** (banner no app ou menu ⋮, *Instalar app*), depois vá em **Ajustes → Notificações**, toque em **Ativar neste aparelho** e em **Enviar notificação de teste**.
 
@@ -120,14 +121,14 @@ No Chrome do Android: abra o site, toque em **Instalar** (banner no app ou menu 
 
 | Variável | Para que serve | Padrão |
 | --- | --- | --- |
-| `APP_PASSWORD` | Senha que você digita no app (um único usuário) | `troque-esta-senha` |
-| `JWT_SECRET` | Segredo que assina a sessão. Gere com `python -c "import secrets; print(secrets.token_urlsafe(48))"` | `troque-este-segredo` |
+| `APP_PASSWORD` | Senha que você digita no app (um único usuário). Obrigatória: o valor de exemplo impede a inicialização | `troque-esta-senha` |
+| `JWT_SECRET` | Segredo que assina a sessão, com pelo menos 32 caracteres (o de exemplo impede a inicialização). Gere com `python -c "import secrets; print(secrets.token_urlsafe(48))"` | `troque-este-segredo` |
 | `POSTGRES_PASSWORD` | Senha do Postgres do Docker Compose | `licita` |
 | `DATABASE_URL` | Conexão com o banco (o Compose já define a sua) | Postgres local |
 | `ANTHROPIC_API_KEY` | Chave da IA que avalia as oportunidades. Sem ela, nada aparece na Entrada | vazio |
 | `LLM_MODEL` | Modelo usado na avaliação | `claude-haiku-5-5` |
 | `LLM_MAX_POR_EXECUCAO` | Teto de avaliações por coleta (controle de custo) | `60` |
-| `RELIEFWEB_APPNAME` | `appname` aprovado da ReliefWeb; vazio mantém a fonte desativada | vazio |
+| `RELIEFWEB_APPNAME` | Reservada: a fonte ReliefWeb não está implementada; ver [docs/fontes/reliefweb.md](docs/fontes/reliefweb.md) | vazio |
 | `ARQUIVOS_DIR` | Pasta dos arquivos anexados aos processos | `/data/arquivos` |
 | `ARQUIVO_MAX_MB` | Tamanho máximo de cada anexo | `20` |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Chaves do Web Push, geradas por `python -m radar.interfaces.gen_vapid` | vazio |

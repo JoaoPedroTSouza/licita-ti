@@ -23,7 +23,7 @@ services:
     depends_on:
       db: { condition: service_healthy }
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"  # só nesta máquina; o app usa a API pela rede interna
     volumes:
       - arquivos:/data/arquivos
 

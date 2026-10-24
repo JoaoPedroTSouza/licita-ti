@@ -36,7 +36,7 @@ def montar_container(
     tmp_path, *, com_ia: bool = True, enviar=None, arquivo_max_mb: int = 20
 ) -> Container:
     settings = Settings(
-        _env_file=None, app_password=SENHA, jwt_secret="segredo-de-teste",
+        _env_file=None, app_password=SENHA, jwt_secret="segredo-de-teste-com-mais-de-32-caracteres",
         database_url="sqlite+pysqlite:///:memory:", anthropic_api_key="x" if com_ia else "",
         arquivo_max_mb=arquivo_max_mb,
     )

@@ -17,7 +17,7 @@ from radar.application.portas import (
 )
 from radar.application.rede import Rede
 from radar.application.triar import TriarOportunidade
-from radar.config import Settings
+from radar.config import Settings, validar_segredos
 from radar.domain.oportunidade import OportunidadeBruta
 from radar.infrastructure.arquivos.disco import ArmazenamentoEmDisco
 from radar.infrastructure.cotacoes.ptax import FontePtax
@@ -60,6 +60,7 @@ class Container:
 
     @classmethod
     def de_settings(cls, settings: Settings) -> "Container":
+        validar_segredos(settings)
         engine = criar_engine(settings.database_url)
         criar_tabelas(engine)
         fabrica = sessionmaker(engine, expire_on_commit=False)
